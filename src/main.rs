@@ -39,6 +39,8 @@ fn select() -> (u32, u32) {
 fn main() {
     let (date, part) = select();
     
+    let start = std::time::Instant::now();
+
     match date {
         1 => match part {
             1 => day_1::part_1(),
@@ -52,4 +54,6 @@ fn main() {
         },
         _ => println!("Invalid date selected, exiting..."),
     }
+
+    println!("Done in {}ms", start.elapsed().as_millis());
 }
