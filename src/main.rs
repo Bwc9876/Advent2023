@@ -1,59 +1,79 @@
-mod day_1;
-mod day_2;
+mod day;
+mod select;
 
-use chrono::{prelude::*, NaiveDate, Weekday};
-use inquire::{DateSelect, Select};
+mod_days!(day_1, day_2);
 
-fn select_date() -> u32 {
-    let today = Local::now().date_naive();
-    let date = DateSelect::new("Select Day To Run")
-        .with_starting_date(today)
-        .with_min_date(NaiveDate::from_ymd_opt(2023, 12, 1).unwrap())
-        .with_max_date(NaiveDate::from_ymd_opt(2023, 12, 25).unwrap())
-        .with_week_start(Weekday::Sun)
-        .prompt();
+use std::io;
+use std::io::Read;
 
-    if let Ok(date) = date {
-        date.day0() + 1
-    } else {
-        println!("No date selected, exiting...");
-        std::process::exit(1);
+use day_1::Day1;
+use day_2::Day2;
+
+use day::Day;
+use select::select;
+
+fn match_day(day: u32) -> Box<dyn Day> {
+    match day {
+        1 => Box::new(Day1),
+        2 => Box::new(Day2),
+        _ => panic!("Invalid day selected, exiting..."),
     }
 }
 
-fn select_part() -> u32 {
-    let part = Select::new("Select Part To Run", vec![1, 2]).prompt();
-
-    if let Ok(part) = part {
-        part
-    } else {
-        println!("No part selected, exiting...");
-        std::process::exit(1);
+fn match_part(part: u32, day: Box<dyn Day>, input: &str) -> i32 {
+    match part {
+        1 => day.part_1(input),
+        2 => day.part_2(input),
+        _ => panic!("Invalid part selected, exiting..."),
     }
-}
-
-fn select() -> (u32, u32) {
-    (select_date(), select_part())
 }
 
 fn main() {
-    let (date, part) = select();
+    let args = std::env::args().collect::<Vec<String>>();
+
+    let (date, part) = if let Some(arg) = args.get(1) {
+        if arg == "help" {
+            println!("Usage: advent_2023 [day:part] [input]");
+            std::process::exit(0);
+        } else {
+            let date_part = arg.split(':').collect::<Vec<&str>>();
+
+            let date = date_part.first().unwrap().parse::<u32>().unwrap();
+            let part = date_part.get(1).unwrap().parse::<u32>().unwrap();
+
+            (date, part)
+        }
+    } else {
+        select()
+    };
+
+    let day = match_day(date);
+
+    let input = if let Some(arg) = args.get(2) {
+        if arg.trim() != "" {
+            if arg == "-" {
+                let mut input = String::new();
+
+                io::stdin()
+                    .read_to_string(&mut input)
+                    .expect("Failed to read input");
+
+                input.trim().to_string()
+            } else {
+                arg.to_string()
+            }
+        } else {
+            day.get_input().to_string()
+        }
+    } else {
+        day.get_input().to_string()
+    };
 
     let start = std::time::Instant::now();
 
-    match date {
-        1 => match part {
-            1 => day_1::part_1(),
-            2 => day_1::part_2(),
-            _ => println!("Invalid part selected, exiting..."),
-        },
-        2 => match part {
-            1 => day_2::part_1(),
-            2 => day_2::part_2(),
-            _ => println!("Invalid part selected, exiting..."),
-        },
-        _ => println!("Invalid date selected, exiting..."),
-    }
+    let result = match_part(part, day, &input);
+
+    println!("Day {} Part {} Result: {}", date, part, result);
 
     println!("Done in {}ms", start.elapsed().as_millis());
 }

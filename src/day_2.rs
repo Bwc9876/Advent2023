@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use crate::{day::Day, get_input_for_day};
+
+#[derive(Debug, PartialEq, Eq)]
 struct Draw {
     red: u32,
     green: u32,
@@ -37,7 +39,7 @@ impl Draw {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 struct Game {
     id: u32,
     draws: Vec<Draw>,
@@ -85,47 +87,124 @@ impl Game {
     }
 }
 
-pub fn part_1() {
-    let input = include_str!("inputs/day_2.txt");
+pub struct Day2;
 
-    let maxes = (12, 13, 14);
+impl Day for Day2 {
 
-    let mut total = 0;
+    get_input_for_day!(2);
 
-    for line in input.lines() {
-        let game = Game::parse(line);
-        let draw_totals = game.get_totals();
-
-        if draw_totals
-            .iter()
-            .all(|(red, green, blue)| red <= &maxes.0 && green <= &maxes.1 && blue <= &maxes.2)
-        {
-            total += game.id;
+    fn part_1(&self, input: &str) -> i32 {    
+        const MAXES: (u32, u32, u32) = (12, 13, 14);
+        let mut total = 0;
+    
+        for line in input.lines() {
+            let game = Game::parse(line);
+            let draw_totals = game.get_totals();
+    
+            if draw_totals
+                .iter()
+                .all(|(red, green, blue)| red <= &MAXES.0 && green <= &MAXES.1 && blue <= &MAXES.2)
+            {
+                total += game.id;
+            }
         }
+        total.try_into().unwrap()
     }
 
-    println!("Total: {}", total);
+    fn part_2(&self, input: &str) -> i32 {
+        let mut total = 0;
+    
+        for line in input.lines() {
+            let game = Game::parse(line);
+            let draw_totals = game.get_totals_three_lists();
+    
+            let maxes = (
+                draw_totals.0.iter().max().unwrap(),
+                draw_totals.1.iter().max().unwrap(),
+                draw_totals.2.iter().max().unwrap(),
+            );
+    
+            let power = maxes.0 * maxes.1 * maxes.2;
+    
+            total += power;
+        }
+    
+        total.try_into().unwrap()
+    }    
+
 }
 
-pub fn part_2() {
-    let input = include_str!("inputs/day_2.txt");
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    let mut total = 0;
+    #[test]
+    fn test_parse_section() {
+        let raw = "1 red";
+        let expected = ("red".to_string(), 1);
+        let actual = Draw::parse_section(raw);
+        assert_eq!(expected, actual);
 
-    for line in input.lines() {
-        let game = Game::parse(line);
-        let draw_totals = game.get_totals_three_lists();
+        let raw = "2 green";
+        let expected = ("green".to_string(), 2);
+        let actual = Draw::parse_section(raw);
+        assert_eq!(expected, actual);
 
-        let maxes = (
-            draw_totals.0.iter().max().unwrap(),
-            draw_totals.1.iter().max().unwrap(),
-            draw_totals.2.iter().max().unwrap(),
-        );
-
-        let power = maxes.0 * maxes.1 * maxes.2;
-
-        total += power;
+        let raw = "3 blue";
+        let expected = ("blue".to_string(), 3);
+        let actual = Draw::parse_section(raw);
+        assert_eq!(expected, actual);
     }
 
-    println!("Total: {}", total);
+    #[test]
+    fn test_parse_draw() {
+        let raw = "1 red, 2 green, 3 blue";
+        let expected = Draw {
+            red: 1,
+            green: 2,
+            blue: 3,
+        };
+        let actual = Draw::parse(raw);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_parse_game() {
+        let raw = "Game 1: 1 red, 2 green, 3 blue; 2 red, 3 green, 4 blue";
+        let expected = Game {
+            id: 1,
+            draws: vec![
+                Draw {
+                    red: 1,
+                    green: 2,
+                    blue: 3,
+                },
+                Draw {
+                    red: 2,
+                    green: 3,
+                    blue: 4,
+                },
+            ],
+        };
+        let actual = Game::parse(raw);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_day_2_part_1() {
+        let day = Day2;
+        let input = day.get_input();
+        let expected = 2164;
+        let actual = day.part_1(input);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_day_2_part_2() {
+        let day = Day2;
+        let input = day.get_input();
+        let expected = 69929;
+        let actual = day.part_2(input);
+        assert_eq!(expected, actual);
+    }
 }
