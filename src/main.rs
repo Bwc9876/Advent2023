@@ -1,17 +1,17 @@
 mod day_1;
 mod day_2;
 
-use chrono::{NaiveDate, Weekday, prelude::*};
-use inquire::{Select, DateSelect};
+use chrono::{prelude::*, NaiveDate, Weekday};
+use inquire::{DateSelect, Select};
 
 fn select_date() -> u32 {
     let today = Local::now().date_naive();
     let date = DateSelect::new("Select Day To Run")
-    .with_starting_date(today)
-    .with_min_date(NaiveDate::from_ymd_opt(2023, 12, 1).unwrap())
-    .with_max_date(NaiveDate::from_ymd_opt(2023, 12, 25).unwrap())
-    .with_week_start(Weekday::Sun)
-    .prompt();
+        .with_starting_date(today)
+        .with_min_date(NaiveDate::from_ymd_opt(2023, 12, 1).unwrap())
+        .with_max_date(NaiveDate::from_ymd_opt(2023, 12, 25).unwrap())
+        .with_week_start(Weekday::Sun)
+        .prompt();
 
     if let Ok(date) = date {
         date.day0() + 1
@@ -38,7 +38,7 @@ fn select() -> (u32, u32) {
 
 fn main() {
     let (date, part) = select();
-    
+
     let start = std::time::Instant::now();
 
     match date {

@@ -1,24 +1,21 @@
-
 #[derive(Debug)]
 struct Draw {
     red: u32,
     green: u32,
-    blue: u32
+    blue: u32,
 }
 
 impl Draw {
-
     fn parse_section(raw: &str) -> (String, u32) {
-        let raw = raw.trim().split(" ").collect::<Vec<&str>>();
+        let raw = raw.trim().split(' ').collect::<Vec<&str>>();
 
-        let number = raw.get(0).unwrap().parse::<u32>().unwrap();
+        let number = raw.first().unwrap().parse::<u32>().unwrap();
         let color = raw.get(1).unwrap();
 
         (color.to_string(), number)
     }
 
     pub fn parse(raw: &str) -> Self {
-
         let sections = raw.split(", ").collect::<Vec<&str>>();
 
         let mut red = 0;
@@ -32,38 +29,35 @@ impl Draw {
                 "red" => red += number,
                 "green" => green += number,
                 "blue" => blue += number,
-                _ => panic!("Invalid color: {}", color)
+                _ => panic!("Invalid color: {}", color),
             }
         }
 
-        Draw {
-            red,
-            green,
-            blue
-        }
+        Draw { red, green, blue }
     }
-
 }
 
 #[derive(Debug)]
 struct Game {
     id: u32,
-    draws: Vec<Draw>
+    draws: Vec<Draw>,
 }
 
 impl Game {
-
     pub fn parse(raw: &str) -> Self {
         let re = regex::Regex::new(r"Game (\d+): (.*)").unwrap();
         let caps = re.captures(raw).unwrap();
 
         let id = caps.get(1).unwrap().as_str().parse::<u32>().unwrap();
-        let draws = caps.get(2).unwrap().as_str().split(";").map(|s| Draw::parse(s)).collect::<Vec<Draw>>();
+        let draws = caps
+            .get(2)
+            .unwrap()
+            .as_str()
+            .split(';')
+            .map(Draw::parse)
+            .collect::<Vec<Draw>>();
 
-        Self {
-            id,
-            draws
-        }
+        Self { id, draws }
     }
 
     pub fn get_totals(&self) -> Vec<(u32, u32, u32)> {
@@ -89,7 +83,6 @@ impl Game {
 
         (reds, greens, blues)
     }
-
 }
 
 pub fn part_1() {
@@ -103,7 +96,10 @@ pub fn part_1() {
         let game = Game::parse(line);
         let draw_totals = game.get_totals();
 
-        if draw_totals.iter().all(|(red, green, blue)| red <= &maxes.0 && green <= &maxes.1 && blue <= &maxes.2) {
+        if draw_totals
+            .iter()
+            .all(|(red, green, blue)| red <= &maxes.0 && green <= &maxes.1 && blue <= &maxes.2)
+        {
             total += game.id;
         }
     }
@@ -123,7 +119,7 @@ pub fn part_2() {
         let maxes = (
             draw_totals.0.iter().max().unwrap(),
             draw_totals.1.iter().max().unwrap(),
-            draw_totals.2.iter().max().unwrap()
+            draw_totals.2.iter().max().unwrap(),
         );
 
         let power = maxes.0 * maxes.1 * maxes.2;
@@ -133,4 +129,3 @@ pub fn part_2() {
 
     println!("Total: {}", total);
 }
-

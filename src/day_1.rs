@@ -1,18 +1,18 @@
 fn number_word_to_digit(number_word: &str) -> &str {
     let pos = NUMBERS.iter().position(|&x| x == number_word).unwrap();
     if pos < 9 {
-        &NUMBERS[pos + 9]
+        NUMBERS[pos + 9]
     } else {
         number_word
     }
 }
 
 const NUMBERS: [&str; 18] = [
-    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "1", "2", "3", "4",
+    "5", "6", "7", "8", "9",
 ];
 
 fn get_first_last(search: &str, include_words: bool) -> (String, String) {
-
     let mut first: (Option<usize>, String) = (None, String::new());
     let mut last: (Option<usize>, String) = (None, String::new());
 
@@ -66,7 +66,9 @@ pub fn part_2() {
             let first_digit = number_word_to_digit(&first);
             let last_digit = number_word_to_digit(&last);
 
-            (first_digit.to_string() + &last_digit.to_string()).parse::<i32>().unwrap()
+            (first_digit.to_string() + last_digit)
+                .parse::<i32>()
+                .unwrap()
         })
         .sum();
 
