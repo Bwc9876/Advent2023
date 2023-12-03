@@ -25,25 +25,31 @@ fn check_char(char: char) -> bool {
 
 type AdjacentCharMap = Vec<((usize, usize), char)>;
 
-fn get_adjacent_chars(input_map: &[Vec<char>], i: usize, j: usize, starting_index: usize) -> AdjacentCharMap {
+fn get_adjacent_chars(input_map: &[Vec<char>], row: usize, starting_index: usize, ending_index: usize) -> AdjacentCharMap {
     let mut chars: AdjacentCharMap = vec![];
 
     let start_minus_one = starting_index.saturating_sub(1);
 
-    let next_on_this_level = *input_map.get(i).unwrap().get(start_minus_one).unwrap_or(&EMPTY_CHAR);
-    let prev_on_this_level = *input_map.get(i).unwrap().get(j).unwrap_or(&EMPTY_CHAR);
+    if starting_index != 0 {
+        let next_on_this_level = *input_map.get(row).unwrap().get(start_minus_one).unwrap_or(&EMPTY_CHAR);
+        chars.push(((row, start_minus_one), next_on_this_level));
+    }
 
-    chars.push(((i, start_minus_one), next_on_this_level));
-    chars.push(((i, j), prev_on_this_level));
+    let prev_on_this_level = input_map.get(row).unwrap().get(ending_index + 1);
 
-    for jj in start_minus_one..j + 1 {
-        let above = i.saturating_sub(1);
-        if let Some(above_row) = input_map.get(above) {
-            chars.push(((above, jj), *above_row.get(jj).unwrap_or(&EMPTY_CHAR)));
+    if let Some(prev_on_this_level) = prev_on_this_level {
+        chars.push(((row, ending_index + 1), *prev_on_this_level));
+    }
+
+    let above = if row == 0 { None } else { input_map.get(row - 1) };
+    let below = input_map.get(row + 1);
+
+    for current_col in start_minus_one..ending_index + 2 {
+        if let Some(above_row) = above {
+            chars.push(((row - 1, current_col), *above_row.get(current_col).unwrap_or(&EMPTY_CHAR)));
         }
-        let below = i.saturating_add(1);
-        if let Some(below_row) = input_map.get(below) {
-            chars.push(((below, jj), *below_row.get(jj).unwrap_or(&EMPTY_CHAR)));
+        if let Some(below_row) = below {
+            chars.push(((row + 1, current_col), *below_row.get(current_col).unwrap_or(&EMPTY_CHAR)));
         }
     }
 
@@ -77,7 +83,12 @@ impl Day for Day3 {
                         continue;
                     }
 
-                    let chars_to_check = get_adjacent_chars(&input_map, i, j, start_index);
+                    let chars_to_check = get_adjacent_chars(
+                        &input_map, 
+                        i, 
+                        start_index, 
+                        j - 1
+                    );
 
                     if chars_to_check.iter().any(|char| check_char(char.1)) {
                         total += current_num.clone().parse::<i32>().unwrap();
@@ -116,7 +127,12 @@ impl Day for Day3 {
                         continue;
                     }
 
-                    let chars_to_check = get_adjacent_chars(&input_map, i, j, start_index);
+                    let chars_to_check = get_adjacent_chars(
+                        &input_map, 
+                        i, 
+                        start_index, 
+                        j - 1
+                    );
 
                     for c in chars_to_check.iter() {
                         if c.1 == '*' {
@@ -186,7 +202,7 @@ mod tests {
             ((2,8), '.')
         ];
 
-        let actual = get_adjacent_chars(&input_map, target.0, target.2 + 1, target.1);
+        let actual = get_adjacent_chars(&input_map, target.0, target.1, target.2);
 
         assert_eq!(expected, actual);
 
