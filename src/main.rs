@@ -1,13 +1,14 @@
 mod day;
 mod select;
 
-mod_days!(day_1, day_2);
+mod_days!(day_1, day_2, day_3);
 
 use std::io;
 use std::io::Read;
 
 use day_1::Day1;
 use day_2::Day2;
+use day_3::Day3;
 
 use day::Day;
 use select::select;
@@ -16,6 +17,7 @@ fn match_day(day: u32) -> Box<dyn Day> {
     match day {
         1 => Box::new(Day1),
         2 => Box::new(Day2),
+        3 => Box::new(Day3),
         _ => panic!("Invalid day selected, exiting..."),
     }
 }
