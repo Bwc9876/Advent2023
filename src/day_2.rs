@@ -47,14 +47,12 @@ struct Game {
 
 impl Game {
     pub fn parse(raw: &str) -> Self {
-        let re = regex::Regex::new(r"Game (\d+): (.*)").unwrap();
-        let caps = re.captures(raw).unwrap();
+        let s = raw.split(": ").collect::<Vec<&str>>();
 
-        let id = caps.get(1).unwrap().as_str().parse::<u32>().unwrap();
-        let draws = caps
-            .get(2)
+        let id = s.first().unwrap().split_once(' ').unwrap().1.trim().parse::<u32>().unwrap();
+        let draws = s
+            .get(1)
             .unwrap()
-            .as_str()
             .split(';')
             .map(Draw::parse)
             .collect::<Vec<Draw>>();
