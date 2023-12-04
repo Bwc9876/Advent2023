@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{day::Day, get_input_for_day};
 
 pub struct Day4;
@@ -20,7 +18,7 @@ impl Card {
         let winning = s.clone().nth(0).unwrap().split(' ').filter_map(|x| x.trim().parse::<u32>().ok()).collect();
         let numbers = s.clone().nth(1).unwrap().split(' ').filter_map(|x| x.trim().parse::<u32>().ok()).collect();
         Self {
-            id: input.split(':').nth(0).unwrap().split_once(' ').unwrap().1.trim().parse::<u32>().unwrap(),
+            id: input.split(':').nth(0).unwrap().split_once(' ').unwrap().1.trim().parse::<u32>().unwrap() - 1,
             winning,
             numbers,
         }
@@ -56,21 +54,21 @@ impl Day for Day4 {
         let lines = input.split('\n');
         let cards = lines.map(Card::parse).collect::<Vec<Card>>();
 
-        let mut amount_map: HashMap<u32, u32> = cards.iter().map(|x| (x.id, 1)).collect();
+        let mut amounts: Vec<u32> = cards.iter().map(|_| 1).collect();
 
         for card in cards.iter() {
             let amount_matching = card.get_amount_matching();
 
             if amount_matching != 0 {
-                let my_amount = *amount_map.get(&card.id).unwrap();
+                let my_amount = *amounts.get(card.id as usize).unwrap();
                 for i in card.id+1..=card.id+amount_matching {
-                    let card_amount = amount_map.get_mut(&i).unwrap();
+                    let card_amount = amounts.get_mut(i as usize).unwrap();
                     *card_amount += my_amount;
                 }
             }
         }
 
-        amount_map.values().sum::<u32>() as i32
+        amounts.into_iter().sum::<u32>() as i32
     }
 
 }
@@ -84,7 +82,7 @@ mod tests {
     fn test_parse() {
         let input = "Card 1: 1 2 3 4 5 | 6 7 8 9 10";
         let card = Card::parse(input);
-        assert_eq!(card.id, 1);
+        assert_eq!(card.id, 0);
         assert_eq!(card.winning, vec![1, 2, 3, 4, 5]);
         assert_eq!(card.numbers, vec![6, 7, 8, 9, 10]);
     }
