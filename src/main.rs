@@ -112,7 +112,5 @@ fn main() {
         day.get_input().to_string()
     };
 
-    let _start = std::time::Instant::now();
-
     run_day(date, part, &input);
 }

@@ -11,7 +11,7 @@ fn select_date() -> u32 {
         .prompt();
 
     if let Ok(date) = date {
-        date.day0() + 1
+        date.day()
     } else {
         println!("No date selected, exiting...");
         std::process::exit(1);
