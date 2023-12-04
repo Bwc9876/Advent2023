@@ -4,7 +4,6 @@ pub struct Day4;
 
 #[derive(Debug)]
 struct Card {
-    id: u32,
     winning: Vec<u32>,
     numbers: Vec<u32>,
 }
@@ -18,7 +17,6 @@ impl Card {
         let winning = s.clone().nth(0).unwrap().split(' ').filter_map(|x| x.trim().parse::<u32>().ok()).collect();
         let numbers = s.clone().nth(1).unwrap().split(' ').filter_map(|x| x.trim().parse::<u32>().ok()).collect();
         Self {
-            id: input.split(':').nth(0).unwrap().split_once(' ').unwrap().1.trim().parse::<u32>().unwrap() - 1,
             winning,
             numbers,
         }
@@ -54,14 +52,15 @@ impl Day for Day4 {
         let lines = input.split('\n');
         let cards = lines.map(Card::parse).collect::<Vec<Card>>();
 
-        let mut amounts: Vec<u32> = cards.iter().map(|_| 1).collect();
+        let mut amounts = vec![1;cards.len()];
 
-        for card in cards.iter() {
+        for (id, card) in cards.iter().enumerate() {
+            let id = id as u32;
             let amount_matching = card.get_amount_matching();
 
             if amount_matching != 0 {
-                let my_amount = *amounts.get(card.id as usize).unwrap();
-                for i in card.id+1..=card.id+amount_matching {
+                let my_amount = *amounts.get(id as usize).unwrap();
+                for i in id+1..=id+amount_matching {
                     let card_amount = amounts.get_mut(i as usize).unwrap();
                     *card_amount += my_amount;
                 }
@@ -82,7 +81,6 @@ mod tests {
     fn test_parse() {
         let input = "Card 1: 1 2 3 4 5 | 6 7 8 9 10";
         let card = Card::parse(input);
-        assert_eq!(card.id, 0);
         assert_eq!(card.winning, vec![1, 2, 3, 4, 5]);
         assert_eq!(card.numbers, vec![6, 7, 8, 9, 10]);
     }
