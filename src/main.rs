@@ -1,7 +1,7 @@
 mod day;
 mod select;
 
-mod_days!(day_1, day_2, day_3, day_4);
+mod_days!(day_1, day_2, day_3, day_4, day_5);
 
 use std::io;
 use std::io::Read;
@@ -10,6 +10,7 @@ use day_1::Day1;
 use day_2::Day2;
 use day_3::Day3;
 use day_4::Day4;
+use day_5::Day5;
 
 use day::Day;
 use select::select;
@@ -20,6 +21,7 @@ fn match_day(day: u32) -> Box<dyn Day> {
         2 => Box::new(Day2),
         3 => Box::new(Day3),
         4 => Box::new(Day4),
+        5 => Box::new(Day5),
         _ => panic!("Invalid day selected, exiting..."),
     }
 }
@@ -51,7 +53,7 @@ fn run_day(day_num: u32, part: u32, input: &str) {
 fn run_all_days() {
     let start = std::time::Instant::now();
 
-    for day_num in 1..=4 {
+    for day_num in 1..=5 {
         for part in 1..=2 {
             let day = match_day(day_num);
 
