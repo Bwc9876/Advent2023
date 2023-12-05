@@ -40,23 +40,27 @@ impl MapRow {
 
     pub fn map_range_split(&self, range: Range<i64>) -> Vec<Range<i64>> {
         let mut mapped_ranges = vec![];
-        let start_dest_diff = self.dest_range.start - self.source_range.start;
+        let start_dest_diff: i64 = self.dest_range.start - self.source_range.start;
+        let range_has_source_start = range.contains(&self.source_range.start);
+        let range_has_source_end = range.contains(&(self.source_range.end - 1));
+
         if range == self.source_range {
             mapped_ranges.push(self.dest_range.clone());
-        } else if range.contains(&self.source_range.start) && range.contains(&(self.source_range.end - 1)) {
+        } else if range_has_source_start && range_has_source_end {
             mapped_ranges.push(range.start..self.source_range.start);
             mapped_ranges.push(self.dest_range.start..self.dest_range.end);
             mapped_ranges.push(self.source_range.end..range.end);
         } else if self.source_range.contains(&range.start) && self.source_range.contains(&(range.end - 1)) {
             mapped_ranges.push(range.start + start_dest_diff..range.end + start_dest_diff);
         }
-        else if range.contains(&self.source_range.start) {
+        else if range_has_source_start {
             mapped_ranges.push(range.start..self.source_range.start);
             mapped_ranges.push(self.dest_range.start..range.end+start_dest_diff);
-        } else if range.contains(&(self.source_range.end - 1)) {
+        } else if range_has_source_end {
             mapped_ranges.push(self.source_range.end..range.end);
             mapped_ranges.push(range.start+start_dest_diff..self.dest_range.end);
         }
+        
         mapped_ranges
     }
 
@@ -74,6 +78,31 @@ impl Map {
         Self {
             rows,
         }
+    }
+
+    pub fn parse_all(lines: Vec<&str>) -> Vec<Self> {
+        let mut lines = lines;
+
+        lines.push("map:");
+
+        let mut maps: Vec<Map> = Vec::new();
+
+        let mut current_map_input: Vec<&str> = vec![];
+
+        let len = lines.len();
+
+        for (i, line) in lines.into_iter().skip(1).enumerate() {
+            if line.contains("map:") || i == len - 1 {
+                maps.push(Map::parse(current_map_input.join("\n").as_str()));
+                current_map_input = vec![];
+            } else if !line.is_empty() {
+                current_map_input.push(line);
+            }
+        }
+
+        maps.retain(|m| m.has_rows());
+
+        maps
     }
 
     pub fn map(&self, in_num: i64) -> i64 {
@@ -97,15 +126,15 @@ impl Map {
                 let mapped = map.map_range_split(range.clone());
                 if !mapped.is_empty() {
                     ranges_mapped[i] = true;
+                    mapped_ranges.extend(mapped);
                 }
-                mapped_ranges.extend(mapped);
             }
         }
-        for (i, range) in ranges.iter().enumerate() {
-            if !ranges_mapped[i] {
-                mapped_ranges.push(range.clone());
-            }
+
+        if ranges_mapped.contains(&false) {
+            mapped_ranges.extend(ranges_mapped.into_iter().enumerate().filter_map(|(i, mapped)| if mapped { None } else { Some(ranges[i].clone()) }).collect::<Vec<Range<i64>>>());
         }
+        
         mapped_ranges
     }
 
@@ -122,36 +151,17 @@ impl Day for Day5 {
 
         let seeds = lines.first().unwrap().split(": ").nth(1).unwrap().split(' ').map(|s| s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
 
-        let mut maps: Vec<Map> = Vec::new();
-
-        let mut current_map_input: Vec<&str> = vec![];
-
-        let len = lines.len();
-
-        for (i, line) in lines.into_iter().skip(1).enumerate() {
-            if line.contains("map:") || i == len - 1 {
-                maps.push(Map::parse(current_map_input.join("\n").as_str()));
-                current_map_input = vec![];
-            } else if !line.is_empty() {
-                current_map_input.push(line);
-            }
-        }
+        let maps = Map::parse_all(lines);
 
         let locations = seeds.iter().map(|s| {
-            let mut loc = *s;
-            for map in &maps {
-                loc = map.map(loc);
-            }
-            loc
+            maps.iter().fold(*s, |num, map| map.map(num))
         }).collect::<Vec<i64>>();
 
         *locations.iter().min().unwrap() as i32
     }
 
     fn part_2(&self, input: &str) -> i32 {
-        let mut lines = input.lines().collect::<Vec<&str>>();
-
-        lines.push("map:");
+        let lines = input.lines().collect::<Vec<&str>>();
 
         let seeds = lines.first().unwrap().split(": ").nth(1).unwrap().split(' ').map(|s| s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
 
@@ -166,31 +176,15 @@ impl Day for Day5 {
             }
         }
 
-        let mut maps: Vec<Map> = Vec::new();
+        let maps = Map::parse_all(lines);
 
-        let mut current_map_input: Vec<&str> = vec![];
-
-        let len = lines.len();
-
-        for (i, line) in lines.into_iter().skip(1).enumerate() {
-            if line.contains("map:") || i == len - 1 {
-                maps.push(Map::parse(current_map_input.join("\n").as_str()));
-                current_map_input = vec![];
-            } else if !line.is_empty() {
-                current_map_input.push(line);
-            }
-        }
-
-        let maps = maps.into_iter().filter(|m| m.has_rows()).collect::<Vec<Map>>();
-
-        let mut ranges_final: Vec<Range<i64>> = vec![];
+        let mut starts = vec![];
 
         for range in ranges.into_iter() {
-            let mut mapped_ranges: Vec<Range<i64>> = maps.iter().fold(vec![range.clone()], |ranges, map| map.map_ranges(ranges));
-            ranges_final.append(&mut mapped_ranges);
+            let mapped_ranges: Vec<Range<i64>> = maps.iter().fold(vec![range.clone()], |ranges, map| map.map_ranges(ranges));
+            let mut _starts = mapped_ranges.into_iter().filter_map(|r| if r.start == 0 { None } else { Some(r.start) }).collect::<Vec<i64>>();
+            starts.append(&mut _starts);
         }
-        
-        let starts = ranges_final.iter().filter(|r| r.start != 0).map(|r| r.start).collect::<Vec<i64>>();
 
         *starts.iter().min().unwrap() as i32
     }
