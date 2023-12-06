@@ -30,13 +30,24 @@ impl Race {
         Self { time, distance }
     }
 
+    // This is my original solution, which I want to redo bc of how easy day 6 was
+    // pub fn ways_to_win(&self) -> u64 {
+    //     let time_range = 1..self.time;
+    //     time_range.filter(|t| {
+    //         let speed = t;
+    //         let distance_traveled = speed * (self.time - t);
+    //         distance_traveled >= self.distance
+    //     }).count() as u64
+    // }
+
+    // New solution using quadratics
     pub fn ways_to_win(&self) -> u64 {
-        let time_range = 1..self.time;
-        time_range.filter(|t| {
-            let speed = t;
-            let distance_traveled = speed * (self.time - t);
-            distance_traveled >= self.distance
-        }).count() as u64
+        let time = self.time as f64;
+        let distance = self.distance as f64;
+        let rt = (time * time - 4_f64 * distance).sqrt();
+        let lower_bound = ((-time + rt) / -2_f64).ceil();
+        let upper_bound = ((-time - rt) / -2_f64).ceil();
+        (upper_bound - lower_bound) as u64
     }
 
 }
@@ -46,21 +57,11 @@ impl Day for Day6 {
     get_input_for_day!(6);
 
     fn part_1(&self, input: &str) -> i32 {
-        let races = Race::parse(input);
-        
-        let mut error_margin = 1;
-
-        for race in races {
-            error_margin *= race.ways_to_win();
-        }
-
-        error_margin as i32
+        Race::parse(input).into_iter().fold(1_u64, |acc, race| acc * race.ways_to_win()) as i32
     }
 
     fn part_2(&self, input: &str) -> i32 {
-        let race = Race::parse_part_2(input);
-        
-        race.ways_to_win() as i32
+        Race::parse_part_2(input).ways_to_win() as i32
     }
 
 }
