@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::{day::Day, get_input_for_day};
+use crate::{day::Day, get_input_for_day, util::parse_padded_numbers};
 
 
 pub struct Day5;
@@ -14,11 +14,10 @@ struct MapRow {
 impl MapRow {
 
     pub fn parse(input: &str) -> Self {
-        let split = input.split(' ');
-        let mut split = split.map(|s| s.trim().parse::<i64>().unwrap());
-        let dest_start = split.next().unwrap();
-        let source_start = split.next().unwrap();
-        let length = split.next().unwrap();
+        let nums = parse_padded_numbers(input);
+        let dest_start = nums[0];
+        let source_start = nums[1];
+        let length = nums[2];
         Self {
             dest_range: dest_start..dest_start+length,
             source_range: source_start..source_start+length,
@@ -149,7 +148,7 @@ impl Day for Day5 {
 
         lines.push("map:");
 
-        let seeds = lines.first().unwrap().split(": ").nth(1).unwrap().split(' ').map(|s| s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
+        let seeds = parse_padded_numbers(lines.first().unwrap().split(": ").nth(1).unwrap());
 
         let maps = Map::parse_all(lines);
 
@@ -163,7 +162,7 @@ impl Day for Day5 {
     fn part_2(&self, input: &str) -> i32 {
         let lines = input.lines().collect::<Vec<&str>>();
 
-        let seeds = lines.first().unwrap().split(": ").nth(1).unwrap().split(' ').map(|s| s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
+        let seeds = parse_padded_numbers(lines.first().unwrap().split(": ").nth(1).unwrap());
 
         let mut ranges = vec![];
         let mut start = 0;

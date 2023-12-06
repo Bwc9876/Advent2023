@@ -1,4 +1,4 @@
-use crate::{day::Day, get_input_for_day};
+use crate::{day::Day, get_input_for_day, util::parse_padded_numbers};
 
 pub struct Day4;
 
@@ -14,8 +14,8 @@ impl Card {
         let data = input.split(':').nth(1).unwrap();
         let data = data.trim().replace("  ", " ");
         let s = data.split('|');
-        let winning = s.clone().nth(0).unwrap().split(' ').filter_map(|x| x.trim().parse::<u32>().ok()).collect();
-        let numbers = s.clone().nth(1).unwrap().split(' ').filter_map(|x| x.trim().parse::<u32>().ok()).collect();
+        let winning = parse_padded_numbers(s.clone().nth(0).unwrap());
+        let numbers = parse_padded_numbers(s.clone().nth(1).unwrap());
         Self {
             winning,
             numbers,

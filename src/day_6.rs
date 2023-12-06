@@ -1,4 +1,4 @@
-use crate::{day::Day, get_input_for_day};
+use crate::{day::Day, get_input_for_day, util::parse_padded_numbers};
 
 
 pub struct Day6;
@@ -13,8 +13,11 @@ impl Race {
 
     pub fn parse(input: &str) -> Vec<Self> {
         let split = input.lines().collect::<Vec<&str>>();
-        let times = split[0].split(": ").nth(1).unwrap().split(' ').filter_map(|x| if x.trim() == "" { None } else { Some(x.trim().parse::<u64>().unwrap()) }).collect::<Vec<u64>>();
-        let distances = split[1].split(": ").nth(1).unwrap().split(' ').filter_map(|x| if x.trim() == "" { None } else { Some(x.trim().parse::<u64>().unwrap()) }).collect::<Vec<u64>>();
+        let times = split[0].split(": ").nth(1).unwrap();
+        let distances = split[1].split(": ").nth(1).unwrap();
+
+        let times = parse_padded_numbers(times);
+        let distances = parse_padded_numbers(distances);
 
         times.into_iter().zip(distances).map(|(time, distance)| Self { time, distance }).collect::<Vec<Self>>()
     }
