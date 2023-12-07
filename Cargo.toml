@@ -8,3 +8,10 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.31"
 inquire = { version = "0.6.2", features = ["date"] }
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = 3
+strip = true
