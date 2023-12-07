@@ -98,8 +98,7 @@ impl Hand {
         match counts[0].0 {
             'J' => {
                 match counts[0].1 {
-                    5 => HandType::FiveOfKind,
-                    4 => HandType::FiveOfKind,
+                    4 | 5 => HandType::FiveOfKind,
                     3 => {
                         if counts[1].1 == 2_u64 {
                             HandType::FiveOfKind
