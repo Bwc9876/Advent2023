@@ -143,7 +143,7 @@ impl Day for Day5 {
 
     get_input_for_day!(5);
 
-    fn part_1(&self, input: &str) -> i32 {
+    fn part_1(&self, input: &str) -> i64 {
         let mut lines = input.lines().collect::<Vec<&str>>();
 
         lines.push("map:");
@@ -156,10 +156,10 @@ impl Day for Day5 {
             maps.iter().fold(*s, |num, map| map.map(num))
         }).collect::<Vec<i64>>();
 
-        *locations.iter().min().unwrap() as i32
+        *locations.iter().min().unwrap() as i64
     }
 
-    fn part_2(&self, input: &str) -> i32 {
+    fn part_2(&self, input: &str) -> i64 {
         let lines = input.lines().collect::<Vec<&str>>();
 
         let seeds = parse_padded_numbers(lines.first().unwrap().split(": ").nth(1).unwrap());
@@ -185,7 +185,7 @@ impl Day for Day5 {
             starts.append(&mut _starts);
         }
 
-        *starts.iter().min().unwrap() as i32
+        *starts.iter().min().unwrap()
     }
 
 }

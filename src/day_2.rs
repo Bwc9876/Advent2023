@@ -91,7 +91,7 @@ impl Day for Day2 {
 
     get_input_for_day!(2);
 
-    fn part_1(&self, input: &str) -> i32 {    
+    fn part_1(&self, input: &str) -> i64 {    
         const MAXES: (u32, u32, u32) = (12, 13, 14);
         let mut total = 0;
     
@@ -109,7 +109,7 @@ impl Day for Day2 {
         total.try_into().unwrap()
     }
 
-    fn part_2(&self, input: &str) -> i32 {
+    fn part_2(&self, input: &str) -> i64 {
         let mut total = 0;
     
         for line in input.lines() {

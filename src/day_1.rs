@@ -49,20 +49,20 @@ impl Day for Day1 {
 
     get_input_for_day!(1);
 
-    fn part_1(&self, input: &str) -> i32 {
-        let total: i32 = input
+    fn part_1(&self, input: &str) -> i64 {
+        let total: i64 = input
             .lines()
             .map(|line| {
                 let (first, last) = get_first_last(line, false);
     
-                (first + &last).parse::<i32>().unwrap()
+                (first + &last).parse::<i64>().unwrap()
             })
             .sum();
         total
     }
 
-    fn part_2(&self, input: &str) -> i32 {
-        let total: i32 = input
+    fn part_2(&self, input: &str) -> i64 {
+        let total: i64 = input
             .lines()
             .map(|line| {
                 let (first, last) = get_first_last(line, true);
@@ -71,7 +71,7 @@ impl Day for Day1 {
                 let last_digit = number_word_to_digit(&last);
     
                 (first_digit.to_string() + last_digit)
-                    .parse::<i32>()
+                    .parse::<i64>()
                     .unwrap()
             })
             .sum();

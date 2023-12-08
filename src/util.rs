@@ -20,6 +20,6 @@ mod tests {
     fn test_parse_padded() {
         let input = "3  56  45  23       56";
         let expected = vec![3, 56, 45, 23, 56];
-        assert_eq!(parse_padded_numbers::<i32>(input), expected);
+        assert_eq!(parse_padded_numbers::<i64>(input), expected);
     }
 }

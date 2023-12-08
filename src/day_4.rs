@@ -41,14 +41,14 @@ impl Day for Day4 {
 
     get_input_for_day!(4);
 
-    fn part_1(&self, input: &str) -> i32 {
+    fn part_1(&self, input: &str) -> i64 {
         let lines = input.split('\n');
         let cards = lines.map(Card::parse).collect::<Vec<Card>>();
 
-        cards.into_iter().map(|x| x.get_score()).sum::<u32>() as i32
+        cards.into_iter().map(|x| x.get_score()).sum::<u32>() as i64
     }
 
-    fn part_2(&self, input: &str) -> i32 {
+    fn part_2(&self, input: &str) -> i64 {
         let lines = input.split('\n');
         let cards = lines.map(Card::parse).collect::<Vec<Card>>();
 
@@ -67,7 +67,7 @@ impl Day for Day4 {
             }
         }
 
-        amounts.into_iter().sum::<u32>() as i32
+        amounts.into_iter().sum::<u32>() as i64
     }
 
 }

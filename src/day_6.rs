@@ -56,12 +56,12 @@ impl Day for Day6 {
 
     get_input_for_day!(6);
 
-    fn part_1(&self, input: &str) -> i32 {
-        Race::parse(input).into_iter().fold(1_u64, |acc, race| acc * race.ways_to_win()) as i32
+    fn part_1(&self, input: &str) -> i64 {
+        Race::parse(input).into_iter().fold(1_u64, |acc, race| acc * race.ways_to_win()) as i64
     }
 
-    fn part_2(&self, input: &str) -> i32 {
-        Race::parse_part_2(input).ways_to_win() as i32
+    fn part_2(&self, input: &str) -> i64 {
+        Race::parse_part_2(input).ways_to_win() as i64
     }
 
 }

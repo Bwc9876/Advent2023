@@ -60,7 +60,7 @@ impl Day for Day3 {
 
     get_input_for_day!(3);
 
-    fn part_1(&self, input: &str) -> i32 {
+    fn part_1(&self, input: &str) -> i64 {
         
         let input_map = str_to_2d_map(input);
 
@@ -91,7 +91,7 @@ impl Day for Day3 {
                     );
 
                     if chars_to_check.iter().any(|char| check_char(char.1)) {
-                        total += current_num.clone().parse::<i32>().unwrap();
+                        total += current_num.clone().parse::<i64>().unwrap();
                     }
 
                     current_num.clear();
@@ -104,7 +104,7 @@ impl Day for Day3 {
         total
     }
 
-    fn part_2(&self, input: &str) -> i32 {
+    fn part_2(&self, input: &str) -> i64 {
         
         let input_map = str_to_2d_map(input);
     
@@ -160,7 +160,7 @@ impl Day for Day3 {
                 }
             }).sum();
 
-        total as i32
+        total as i64
     }
 
 }

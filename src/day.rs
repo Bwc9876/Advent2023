@@ -1,7 +1,7 @@
 pub trait Day {
-    fn part_1(&self, input: &str) -> i32;
+    fn part_1(&self, input: &str) -> i64;
 
-    fn part_2(&self, input: &str) -> i32;
+    fn part_2(&self, input: &str) -> i64;
 
     fn get_input(&self) -> &'static str;
 }

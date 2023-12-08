@@ -163,7 +163,7 @@ impl Hand {
         }
     }
 
-    fn compare_values(&self, other: Vec<char>) -> std::cmp::Ordering {
+    fn compare_values(&self, other: Vec<char>) -> Ordering {
         for (char, other) in self.values.iter().zip(other.iter()) {
             let vals = if self.consider_jokers { Self::VALS_JOKERS } else { Self::VALS };
             let self_val = vals.find(*char).unwrap();
@@ -171,18 +171,18 @@ impl Hand {
 
             let ord = self_val.cmp(&other_val);
 
-            if ord != std::cmp::Ordering::Equal {
+            if ord != Ordering::Equal {
                 return ord;
             }
         }
-        std::cmp::Ordering::Equal
+        Ordering::Equal
     }
 
 }
 
 impl PartialEq for Hand {
     fn eq(&self, other: &Self) -> bool {
-        self.determine_type() == other.determine_type() && self.compare_values(other.values.clone()) == std::cmp::Ordering::Equal
+        self.cmp(other) == Ordering::Equal
     }
 }
 
@@ -191,7 +191,7 @@ impl Eq for Hand {
 }
 
 impl Ord for Hand {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         let self_type = self.determine_type();
         let other_type = other.determine_type();
 
@@ -200,7 +200,7 @@ impl Ord for Hand {
 }
 
 impl PartialOrd for Hand {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -210,16 +210,16 @@ pub struct Day7;
 impl Day for Day7 {
     get_input_for_day!(7);
 
-    fn part_1(&self, input: &str) -> i32 {
+    fn part_1(&self, input: &str) -> i64 {
         let mut hands = input.lines().map(|l| Hand::parse(l, false)).collect::<Vec<Hand>>();
         hands.sort();
-        hands.into_iter().enumerate().map(|(i, h)| h.bid * ((i as u64) + 1) ).sum::<u64>() as i32
+        hands.into_iter().enumerate().map(|(i, h)| h.bid * ((i as u64) + 1) ).sum::<u64>() as i64
     }
 
-    fn part_2(&self, input: &str) -> i32 {
+    fn part_2(&self, input: &str) -> i64 {
         let mut hands = input.lines().map(|l| Hand::parse(l, true)).collect::<Vec<Hand>>();
         hands.sort();
-        hands.into_iter().enumerate().map(|(i, h)| h.bid * ((i as u64) + 1) ).sum::<u64>() as i32
+        hands.into_iter().enumerate().map(|(i, h)| h.bid * ((i as u64) + 1) ).sum::<u64>() as i64
     }
 }
 
