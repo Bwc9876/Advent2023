@@ -14,46 +14,32 @@ impl History {
         }
     }
 
-    fn get_pyramid(&self) -> Vec<Vec<i64>> {
-        let mut current = self.nums.clone();
-        let mut rows = vec![self.nums.clone()];
-
-        while current.iter().any(|n| *n != 0_i64) {
-            let mut new = vec![];
-
-            for i in 0..current.len() - 1 {
-                new.push(current[i + 1] - current[i]);
-            }
-
-            rows.push(new.clone());
-            current = new;
+    fn _get_pyramid(ins: &[i64]) -> Vec<Vec<i64>> {
+        let res = vec![ins.to_owned()];
+        if ins.iter().all(|i| *i == 0) {
+            res
+        } else {
+            let next = ins.windows(2).map(|w| w[1] - w[0]).collect::<Vec<_>>();
+            res.iter().chain(Self::_get_pyramid(&next).iter()).cloned().collect()
         }
+    }
 
-        rows
+    fn get_pyramid(&self) -> Vec<Vec<i64>> {
+        Self::_get_pyramid(&self.nums)
     }
 
     fn calc_next(&self) -> i64 {
         let pyramid = self.get_pyramid();
 
-        let mut val = 0;
-
-        for row in pyramid.iter().rev().skip(1) {
-            val += row.last().unwrap();
-        }
-
-        val
+        pyramid.iter().rev().skip(1).map(|r| r.last().unwrap()).sum()
     }
 
     fn calc_prev(&self) -> i64 {
         let pyramid = self.get_pyramid();
 
-        let mut val = 0;
-
-        for row in pyramid.iter().rev().skip(1) {
-            val = row.first().unwrap() - val;
-        }
-
-        val
+        pyramid.iter().rev().skip(1).fold(0, |acc, r| {
+            r.first().unwrap() - acc
+        })
     }
 }
 
