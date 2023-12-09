@@ -88,16 +88,12 @@ impl Day for Day8 {
 
     fn part_2(&self, input: &str) -> i64 {
         let lines = input.lines().collect::<Vec<&str>>();
-
         let directions = lines[0].chars().collect::<Vec<char>>();
-
         let nodes = lines[2..].iter().map(|l| Node::parse(l)).map(|n| (n.id.clone(), n)).collect::<HashMap<String, Node>>();
-
         let distances_to_z: Vec<i64> = nodes.values().filter(|n| n.id.ends_with('A')).map(|n| {
             n.get_distance(|s| s.ends_with('Z'), &directions, &nodes)
         }).collect();
 
-        
         distances_to_z.into_iter().fold(1, least_common_denominator)
     }
 
