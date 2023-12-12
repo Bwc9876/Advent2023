@@ -1,3 +1,4 @@
+mod bootstrap;
 mod day;
 mod select;
 mod util;
@@ -88,6 +89,15 @@ fn main() {
         match arg.trim() {
             "help" => {
                 println!("Usage: advent_2023 [day:part] [input]");
+                std::process::exit(0);
+            }
+            "bootstrap" => {
+                let num = args
+                    .get(2)
+                    .and_then(|n| n.parse::<u32>().ok())
+                    .unwrap_or_else(bootstrap::get_next_highest_day);
+                bootstrap::bootstrap_file(num);
+                println!("Created day_{}.rs", num);
                 std::process::exit(0);
             }
             "*" => {
