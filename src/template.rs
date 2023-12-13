@@ -3,6 +3,8 @@ use crate::{day::Day, get_input_for_day};
 pub struct Day_n_;
 
 impl Day for Day_n_ {
+
+    get_input_for_day!(_n_);
     fn part_1(&self, input: &str) -> i64 {
         todo!();
     }
