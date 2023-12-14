@@ -200,18 +200,18 @@ mod tests {
         assert_eq!(hash_rounds(&rounds), hash_rounds(&rounds_2));
     }
 
-    // #[test]
-    // fn test_part_1() {
-    //     let day = Day14;
-    //     let input = day.get_input();
-    //     assert_eq!(day.part_1(&input), 0);
-    // }
+    #[test]
+    fn test_part_1() {
+        let day = Day14;
+        let input = day.get_input();
+        assert_eq!(day.part_1(input), 107142);
+    }
 
-    // #[test]
-    // fn test_part_2() {
-    //     let day = Day14;
-    //     let input = day.get_input();
-    //     assert_eq!(day.part_2(&input), 0);
-    // }
+    #[test]
+    fn test_part_2() {
+        let day = Day14;
+        let input = day.get_input();
+        assert_eq!(day.part_2(input), 104815);
+    }
 
 }
