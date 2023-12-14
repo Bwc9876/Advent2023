@@ -145,7 +145,7 @@ impl Day for Day14 {
 
     fn part_2(&self, input: &str) -> i64 {
         
-        const TIMES: usize = 1000;
+        const TIMES: usize = 1000000000;
         
         let lines =  input.lines().collect::<Vec<_>>();
         let grid = make_grid(lines);
@@ -155,8 +155,6 @@ impl Day for Day14 {
         let size = (grid[0].len(), grid.len());
 
         let dirs = vec![Direction::North, Direction::West, Direction::South, Direction::East];
-
-        rounds.sort();
 
         let mut seen_states = HashMap::new();
 
