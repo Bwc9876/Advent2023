@@ -38,29 +38,27 @@ impl MapRow {
     }
 
     pub fn map_range_split(&self, range: Range<i64>) -> Vec<Range<i64>> {
-        let mut mapped_ranges = vec![];
         let start_dest_diff: i64 = self.dest_range.start - self.source_range.start;
         let range_has_source_start = range.contains(&self.source_range.start);
         let range_has_source_end = range.contains(&(self.source_range.end - 1));
 
         if range == self.source_range {
-            mapped_ranges.push(self.dest_range.clone());
+            vec![self.dest_range.clone()]
         } else if range_has_source_start && range_has_source_end {
-            mapped_ranges.push(range.start..self.source_range.start);
-            mapped_ranges.push(self.dest_range.start..self.dest_range.end);
-            mapped_ranges.push(self.source_range.end..range.end);
+            vec![range.start..self.source_range.start,
+                self.dest_range.start..self.dest_range.end,
+                self.source_range.end..range.end]
         } else if self.source_range.contains(&range.start) && self.source_range.contains(&(range.end - 1)) {
-            mapped_ranges.push(range.start + start_dest_diff..range.end + start_dest_diff);
+            // Stop clippy from complaining about doing a Vec<Range> with only one element (clippy::single_range_in_vec_init)
+            std::iter::once(range.start + start_dest_diff..range.end + start_dest_diff).collect()
         }
         else if range_has_source_start {
-            mapped_ranges.push(range.start..self.source_range.start);
-            mapped_ranges.push(self.dest_range.start..range.end+start_dest_diff);
+            vec![range.start..self.source_range.start, self.dest_range.start..range.end+start_dest_diff]
         } else if range_has_source_end {
-            mapped_ranges.push(self.source_range.end..range.end);
-            mapped_ranges.push(range.start+start_dest_diff..self.dest_range.end);
+            vec![self.source_range.end..range.end, range.start+start_dest_diff..self.dest_range.end]
+        } else {
+            vec![]
         }
-        
-        mapped_ranges
     }
 
 }
@@ -92,14 +90,15 @@ impl Map {
 
         for (i, line) in lines.into_iter().skip(1).enumerate() {
             if line.contains("map:") || i == len - 1 {
-                maps.push(Map::parse(current_map_input.join("\n").as_str()));
+                let map = Map::parse(current_map_input.join("\n").as_str());
+                if map.has_rows() {
+                    maps.push(map);
+                }
                 current_map_input = vec![];
             } else if !line.is_empty() {
                 current_map_input.push(line);
             }
         }
-
-        maps.retain(|m| m.has_rows());
 
         maps
     }

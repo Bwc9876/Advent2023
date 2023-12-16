@@ -105,20 +105,9 @@ fn get_squares_per_line(grid: &Vec<Vec<char>>) -> (Vec<Vec<Position>>, Vec<Vec<P
 }
 
 fn hash_rounds(rounds: &[Position]) -> u64 {
-    // I have no idea how to hash shit rust std lib to the rescue
-
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-
-    let mut hasher = DefaultHasher::new();
-
-    let mut rounds = rounds.to_vec();
-
-    rounds.sort(); // Ensure order doesn't mess with things
-
-    rounds.hash(&mut hasher);
-
-    hasher.finish()
+    rounds.iter().fold(0, |acc, (x, y)| {
+        acc + (x + y * 100) as u64
+    })
 }
 
 pub struct Day14;
@@ -169,12 +158,14 @@ impl Day for Day14 {
 
             let hash = hash_rounds(&rounds);
 
-            let cycle_start = *seen_states.entry(hash).or_insert(pos);
+            let cycle_start = seen_states.get(&hash);
 
-            if cycle_start < pos {
-                let cycle_length = pos - cycle_start;
+            if let Some(start) = cycle_start {
+                let cycle_length = pos - *start;
                 let to_do = (TIMES - pos) / cycle_length;
                 pos += to_do * cycle_length;
+            } else {
+                seen_states.insert(hash, pos);
             }
 
         }

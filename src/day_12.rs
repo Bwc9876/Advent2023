@@ -98,12 +98,12 @@ impl Day for Day12 {
 
     fn part_1(&self, input: &str) -> i64 {
         let rows = input.lines().map(|l| SpringRow::parse(l, false)).collect::<Vec<_>>();
-        rows.iter().map(|r| dbg!(r.find_combinations())).sum::<usize>() as i64
+        rows.iter().map(|r| r.find_combinations()).sum::<usize>() as i64
     }
 
     fn part_2(&self, input: &str) -> i64 {
         let rows = input.lines().map(|l| SpringRow::parse(l, true)).collect::<Vec<_>>();
-        rows.iter().map(|r| dbg!(r.find_combinations())).sum::<usize>() as i64
+        rows.iter().map(|r| r.find_combinations()).sum::<usize>() as i64
     }
 }
 
