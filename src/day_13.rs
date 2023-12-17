@@ -1,15 +1,15 @@
 use std::cmp::Ordering;
 
-use crate::{day::Day, get_input_for_day};
+use crate::{day::Day, get_input_for_day, utils::Grid};
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Tile {
     Ash,
     Rock
 }
 
-impl Tile {
-    fn from_char(c: char) -> Self {
+impl From<char> for Tile {
+    fn from(c: char) -> Self {
         match c {
             '.' => Self::Ash,
             '#' => Self::Rock,
@@ -18,39 +18,27 @@ impl Tile {
     }
 }
 
-type Grid = Vec<Vec<Tile>>;
-type R = Vec<usize>;
+type Tiles = Grid<Tile>;
 
 struct TileGrid {
-    tiles: Grid
+    tiles: Tiles
 }
 
 impl TileGrid {
 
     pub fn parse(input: &str) -> Self {
-        let tiles = input.lines().map(|line| {
-            line.chars().map(Tile::from_char).collect()
-        }).collect();
-        Self { tiles }
-    }
-
-    pub fn rotate(&self) -> Grid {
-        let mut tiles = vec![vec![Tile::Ash; self.tiles.len()]; self.tiles[0].len()];
-        for (i, row) in self.tiles.iter().enumerate() {
-            for (j, tile) in row.iter().enumerate() {
-                tiles[j][i] = *tile;
-            }
+        Self {
+            tiles: Tiles::parse(input)
         }
-        tiles
     }
 
-    fn count_differences_in_row(row_1: Vec<Tile>, row_2: Vec<Tile>) -> usize {
+    fn count_differences_in_row(row_1: &[&Tile], row_2: &[&Tile]) -> usize {
         row_1.iter().zip(row_2.iter()).filter(|(t1, t2)| t1 != t2).count()
     }
 
-    fn find_reflections(tiles: &Grid, target_diffs: usize) -> R {
-        let centers = tiles.windows(2).enumerate().filter_map(|(i, t)| {
-            if Self::count_differences_in_row(t[0].clone(), t[1].clone()) == target_diffs {
+    fn find_reflections(rows: Vec<Vec<&Tile>>, target_diffs: usize) -> Option<usize> {
+        let centers = rows.windows(2).enumerate().filter_map(|(i, t)| {
+            if Self::count_differences_in_row(&t[0], &t[1]) == target_diffs {
                 Some((i, true))
             } else if t[0] == t[1] {
                 Some((i, false))
@@ -59,46 +47,43 @@ impl TileGrid {
             }
         }).collect::<Vec<_>>();
 
-        centers.into_iter().filter_map(|(center, used_fix)| {
-            let rest_len = tiles.len() - center - 1;
+        centers.into_iter().find_map(|(center, used_fix)| {
+            let rest_len = rows.len() - center - 1;
 
             let mut checks = match center.cmp(&rest_len) {
-                Ordering::Greater => (tiles[(center - rest_len + 1)..=center].to_vec(), tiles[center+1..].to_vec()),
-                Ordering::Less => (tiles[..=center].to_vec(), tiles[center+1..(center+1)*2].to_vec()),
-                Ordering::Equal => (tiles[center-(center-1)..=center].to_vec(), tiles[center+1..].to_vec())
+                Ordering::Greater => (rows[(center - rest_len + 1)..=center].to_vec(), rows[center+1..].to_vec()),
+                Ordering::Less => (rows[..=center].to_vec(), rows[center+1..(center+1)*2].to_vec()),
+                Ordering::Equal => (rows[center-(center-1)..=center].to_vec(), rows[center+1..].to_vec())
             };
 
             checks.1.reverse();
 
-            let diffs = checks.0.into_iter().zip(checks.1).map(|(t1, t2)| Self::count_differences_in_row(t1, t2)).sum::<usize>();
+            let diffs = checks.0.into_iter().zip(checks.1).map(|(t1, t2)| Self::count_differences_in_row(&t1, &t2)).sum::<usize>();
 
             if (used_fix && diffs == 0) || diffs == target_diffs {
                 Some(center)
             } else {
                 None
             }
-        }).collect()
+        })
     }
 
-    pub fn find_reflections_rows(&self, target_diffs: usize) -> R {
-        Self::find_reflections(&self.tiles, target_diffs)
+    pub fn find_reflections_rows(&self, target_diffs: usize) -> Option<usize> {
+        Self::find_reflections(self.tiles.iter_rows().collect(), target_diffs)
     }
 
-    pub fn find_reflections_columns(&self, target_diffs: usize) -> R  {
-        let rotated = self.rotate();
-        Self::find_reflections(&rotated, target_diffs)
+    pub fn find_reflections_columns(&self, target_diffs: usize) -> Option<usize>  {
+        Self::find_reflections(self.tiles.iter_cols().collect(), target_diffs)
     }
 
     pub fn find_reflection_summaries(&self, target_diffs: usize) -> usize {
         let rows = self.find_reflections_rows(target_diffs);
         let columns = self.find_reflections_columns(target_diffs);
-
-        assert!(rows.len() + columns.len() == 1, "Uh oh");
         
-        let columns_stats = columns.iter().map(|c| c + 1).collect::<Vec<_>>();
-        let rows_stats = rows.iter().map(|c| (c + 1) * 100).collect::<Vec<_>>();
+        let columns_stats = columns.map(|c| c + 1);
+        let rows_stats = rows.map(|r| (r + 1) * 100);
 
-        columns_stats.iter().sum::<usize>() + rows_stats.iter().sum::<usize>()
+        columns_stats.unwrap_or(rows_stats.unwrap_or(0))
     }
 
 }

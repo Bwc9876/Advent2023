@@ -1,14 +1,6 @@
 use std::collections::HashSet;
 
-use crate::{day::Day, get_input_for_day};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
+use crate::{day::Day, get_input_for_day, utils::{grid::{GridPointer, Position}, Direction, Grid}};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Mirror {
@@ -29,9 +21,9 @@ enum Tile {
     Splitter(Splitter),
 }
 
-impl Tile {
+impl From<char> for Tile {
 
-    pub fn parse(c: char) -> Self {
+    fn from(c: char) -> Self {
         match c {
             '.' => Self::Empty,
             '/' => Self::Mirror(Mirror::Forward),
@@ -44,125 +36,72 @@ impl Tile {
 
 }
 
-type Pos = (usize, usize);
-type Tiles = Vec<Vec<Tile>>;
+type Tiles = Grid<Tile>;
 
 #[derive(Debug)]
-struct Beam {
-    pos: Pos,
-    current_direction: Direction,
-}
+struct Beam(GridPointer);
 
 impl Beam {
 
-    pub fn new(pos: Pos, direction: Direction) -> Self {
-        Self {
-            pos,
-            current_direction: direction,
-        }
+    pub fn new(pos: Position, direction: Direction) -> Self {
+        Self(GridPointer::new(pos, direction))
     }
 
-    pub fn split(self, splitter: &Splitter) -> Vec<Self> {
+    pub fn split(&mut self, splitter: &Splitter) -> Option<Self> {
         match splitter {
             Splitter::Vertical => {
-                match self.current_direction {
-                    Direction::Up | Direction::Down => {
-                        vec![self]
-                    }
+                match self.0.dir {
+                    Direction::East | Direction::West => {
+                        self.0.dir = Direction::North;
+                        Some(Self::new(self.0.pos, Direction::South))
+                    },
                     _ => {
-                        vec![
-                            Self::new(self.pos, Direction::Up),
-                            Self::new(self.pos, Direction::Down),
-                        ]
+                        None
                     }
                 }
             },
             Splitter::Horizontal => {
-                match self.current_direction {
-                    Direction::Left | Direction::Right => {
-                        vec![self]
-                    }
+                match self.0.dir {
+                    Direction::North | Direction::South => {
+                        self.0.dir = Direction::East;
+                        Some(Self::new(self.0.pos, Direction::West))
+                    },
                     _ => {
-                        vec![
-                            Self::new(self.pos, Direction::Left),
-                            Self::new(self.pos, Direction::Right),
-                        ]
+                        None
                     }
                 }
             }
         }
     }
 
-    pub fn reflect(self, mirror: &Mirror) -> Self {
-        match (mirror, self.current_direction) {
-            (Mirror::Forward, Direction::Up) => {
-                Self::new(self.pos, Direction::Right)
-            },
-            (Mirror::Forward, Direction::Down) => {
-                Self::new(self.pos, Direction::Left)
-            },
-            (Mirror::Forward, Direction::Left) => {
-                Self::new(self.pos, Direction::Down)
-            },
-            (Mirror::Forward, Direction::Right) => {
-                Self::new(self.pos, Direction::Up)
-            },
-            (Mirror::Backward, Direction::Up) => {
-                Self::new(self.pos, Direction::Left)
-            },
-            (Mirror::Backward, Direction::Down) => {
-                Self::new(self.pos, Direction::Right)
-            },
-            (Mirror::Backward, Direction::Left) => {
-                Self::new(self.pos, Direction::Up)
-            },
-            (Mirror::Backward, Direction::Right) => {
-                Self::new(self.pos, Direction::Down)
-            },
+    pub fn reflect(&mut self, mirror: &Mirror) {
+        self.0.dir = match (mirror, self.0.dir) {
+            (Mirror::Forward, Direction::North) => Direction::East,
+            (Mirror::Forward, Direction::South) => Direction::West,
+            (Mirror::Forward, Direction::East) => Direction::North,
+            (Mirror::Forward, Direction::West) => Direction::South,
+            (Mirror::Backward, Direction::North) => Direction::West,
+            (Mirror::Backward, Direction::South) => Direction::East,
+            (Mirror::Backward, Direction::East) => Direction::South,
+            (Mirror::Backward, Direction::West) => Direction::North,
         }
     }
 
-    pub fn advance(mut self, tiles: &Tiles, no_inc: bool) -> Option<Vec<Self>> {
-        let (x, y) = self.pos;
-        let (width, height) = (tiles[0].len(), tiles.len());
+    pub fn advance(&mut self, tiles: &Tiles, no_inc: bool) -> Option<Option<Self>> {
         
-        if !no_inc {
-            self.pos = match self.current_direction {
-                Direction::Up => {
-                    if y == 0 {
-                        return None;
-                    }
-                    (x, y - 1)
-                },
-                Direction::Down => {
-                    if y == height - 1 {
-                        return None;
-                    }
-                    (x, y + 1)
-                },
-                Direction::Left => {
-                    if x == 0 {
-                        return None;
-                    }
-                    (x - 1, y)
-                },
-                Direction::Right => {
-                    if x == width - 1 {
-                        return None;
-                    }
-                    (x + 1, y)
-                },
-            };
+        if !no_inc && !self.0.move_to_next(tiles) {
+            return None;
         }
 
-        let new_tile = &tiles[self.pos.1][self.pos.0];
+        let new_tile = tiles.get(self.0.pos)?;
 
         match new_tile {
             Tile::Empty => {
-                Some(vec![self])
+                Some(None)
             },
             Tile::Mirror(mirror) => {
-                Some(vec![self.reflect(mirror)])
+                self.reflect(mirror);
+                Some(None)
             },
             Tile::Splitter(splitter) => {
                 Some(self.split(splitter))
@@ -173,26 +112,38 @@ impl Beam {
 
 }
 
-fn get_energized(starting_beam: Beam, tiles: &Tiles) -> i64 {
-    let mut beams = starting_beam.advance(tiles, true).unwrap();
+fn get_energized(mut starting_beam: Beam, tiles: &Tiles) -> i64 {
+    let other_starting = starting_beam.advance(tiles, true).unwrap();
+
+    let mut beams = if let Some(other_starting) = other_starting {
+        vec![starting_beam, other_starting]
+    } else {
+        vec![starting_beam]
+    };
 
     let mut visited_poses = HashSet::new();
-    let mut visited: HashSet<(Pos, Direction)> = HashSet::new();
+    let mut visited: HashSet<GridPointer> = HashSet::new();
 
     while !beams.is_empty() {
-        let mut new_beams = vec![];
-        for beam in beams {
-            if visited.contains(&(beam.pos, beam.current_direction)) {
-                continue;
-            } else if !visited_poses.contains(&beam.pos) {
-                visited_poses.insert(beam.pos);
+        beams = beams.into_iter().filter_map(|mut beam| {
+            if visited.contains(&beam.0) {
+                return None;
+            } else if !visited_poses.contains(&beam.0.pos) {
+                visited_poses.insert(beam.0.pos);
             }
-            visited.insert((beam.pos, beam.current_direction));
-            if let Some(mut new_beam) = beam.advance(tiles, false) {
-                new_beams.append(&mut new_beam);
+            visited.insert(beam.0.clone());
+            match beam.advance(tiles, false) {
+                Some(Some(new_beam)) => {
+                    Some(vec![beam, new_beam])
+                },
+                Some(None) => {
+                    Some(vec![beam])
+                },
+                None => {
+                    None
+                }
             }
-        }
-        beams = new_beams;
+        }).flatten().collect();
     }
 
     visited_poses.len() as i64
@@ -205,21 +156,15 @@ impl Day for Day16 {
     get_input_for_day!(16);
 
     fn part_1(&self, input: &str) -> i64 {
-        let tiles = input.lines().map(|line| {
-            line.chars().map(Tile::parse).collect::<Vec<_>>()
-        }).collect::<Vec<_>>();
-
-        let starting_beam = Beam::new((0, 0), Direction::Right);
-
+        let tiles = Grid::parse(input);
+        let starting_beam = Beam(GridPointer::zero());
         get_energized(starting_beam, &tiles)
     }
 
     fn part_2(&self, input: &str) -> i64 {
-        let tiles = input.lines().map(|line| {
-            line.chars().map(Tile::parse).collect::<Vec<_>>()
-        }).collect::<Vec<_>>();
+        let tiles = Grid::parse(input);
 
-        let (width, height) = (tiles[0].len(), tiles.len());
+        let (width, height) = tiles.size();
 
         (0..width).map(|x| {
 
@@ -229,15 +174,15 @@ impl Day for Day16 {
                 let mut to_check = vec![];
 
                 if x == 0 {
-                    to_check.push(Direction::Right);
+                    to_check.push(Direction::East);
                 } else if x == width - 1 {
-                    to_check.push(Direction::Left);
+                    to_check.push(Direction::West);
                 }
 
                 if y == 0 {
-                    to_check.push(Direction::Down);
+                    to_check.push(Direction::South);
                 } else if y == height - 1 {
-                    to_check.push(Direction::Up);
+                    to_check.push(Direction::North);
                 }
 
                 to_check.into_iter().map(|dir| {

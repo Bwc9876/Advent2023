@@ -1,46 +1,8 @@
 use std::collections::HashMap;
 
-use crate::{day::Day, get_input_for_day};
+use crate::{day::Day, get_input_for_day, utils::{Direction, Grid, grid::Position}};
 
-#[derive(Debug, Clone, Copy)]
-enum Direction {
-    North,
-    South,
-    East,
-    West
-}
-
-impl Direction {
-    pub fn opposite(&self) -> Self {
-        match self {
-            Self::North => Self::South,
-            Self::South => Self::North,
-            Self::East => Self::West,
-            Self::West => Self::East
-        }
-    }
-
-    pub fn ninety_deg(&self, clockwise: bool) -> Self {
-        match self {
-            Self::North => if clockwise { Self::East } else { Self::West },
-            Self::South => if clockwise { Self::West } else { Self::East },
-            Self::East => if clockwise { Self::South } else { Self::North },
-            Self::West => if clockwise { Self::North } else { Self::South }
-        }
-    }
-
-    pub fn add_to_pos(&self, pos: (usize, usize)) -> (i32, i32) {
-        let pos = (pos.0 as i32, pos.1 as i32);
-        match self {
-            Self::North => (pos.0, pos.1 - 1),
-            Self::South => (pos.0, pos.1 + 1),
-            Self::East => (pos.0 + 1, pos.1),
-            Self::West => (pos.0 - 1, pos.1)
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MapTile {
     Vertical,
     Horizontal,
@@ -52,9 +14,8 @@ enum MapTile {
     Empty
 }
 
-impl MapTile {
-
-    pub fn parse(c: char) -> Self {
+impl From<char> for MapTile {
+    fn from(c: char) -> Self {
         match c {
             '|' => Self::Vertical,
             '-' => Self::Horizontal,
@@ -66,6 +27,9 @@ impl MapTile {
             _ => Self::Empty
         }
     }
+}
+
+impl MapTile {
 
     pub fn determine_from_directions(a: &Direction, b: &Direction) -> Self {
         match (a, b) {
@@ -105,40 +69,29 @@ impl MapTile {
     }
 }
 
-fn find_start(map: &[Vec<MapTile>]) -> (usize, usize) {
-    map.iter().enumerate().find_map(|(y, row)| row.iter().enumerate().find_map(|(x, tile)| if matches!(*tile, MapTile::Start) { Some((x, y)) } else { None })).unwrap()
+type Map = Grid<MapTile>;
+
+fn find_start(map: &Map) -> Position {
+    map.iter().find_map(|(p, tile)| if *tile == MapTile::Start { Some(p) } else { None }).unwrap()
 }
 
-fn get_adjacents(pos: (usize, usize), map: &Vec<Vec<MapTile>>) -> Vec<((usize, usize), Direction)> {
-    vec![Direction::North, Direction::South, Direction::East, Direction::West].into_iter().filter_map(|dir| {
-        let pos = dir.add_to_pos(pos);
-
-        if pos.0 > 0 && pos.1 > 0 && pos.0 < map[0].len() as i32 && pos.1 < map.len() as i32 {
-            Some(((pos.0 as usize, pos.1 as usize), dir))
-        } else {
-            None
-        }
-    }).collect()
+fn get_connectors_of_tile(pos: Position, map: &Map) -> Vec<(Position, Direction)> {
+    let adjacents = map.get_direct_adjacents(pos);
+    adjacents.into_iter().filter(|(p, d)| map.get(*p).unwrap().has_direction(&d.opposite())).collect::<Vec<_>>()
 }
 
-fn get_connectors_of_tile(pos: (usize, usize), map: &Vec<Vec<MapTile>>) -> Vec<((usize, usize), Direction)> {
-    let adjacents = get_adjacents(pos, map);
-    adjacents.into_iter().filter(|adjacent| map[adjacent.0.1][adjacent.0.0].has_direction(&adjacent.1.opposite())).collect::<Vec<_>>()
-}
-
-fn follow_loop(map: &Vec<Vec<MapTile>>) -> HashMap<(usize, usize), MapTile> {
-    
+fn follow_loop(map: &Map) -> HashMap<Position, MapTile> {
     let start_pos = find_start(map);
     let connectors = get_connectors_of_tile(start_pos, map);
     let start_tile = MapTile::determine_from_directions(&connectors[0].1, &connectors[1].1);
 
     let mut current = connectors[0];
-    let tile = map[current.0.1][current.0.0];
+    let tile = map.get(current.0).unwrap();
 
-    let mut loop_tiles = [(start_pos, start_tile), (current.0, tile)].iter().copied().collect::<HashMap<_, _>>();
+    let mut loop_tiles = [(start_pos, start_tile), (current.0, *tile)].iter().copied().collect::<HashMap<_, _>>();
 
     while current.0 != start_pos {
-        let current_tile = &map[current.0.1][current.0.0];
+        let current_tile = map.get(current.0).unwrap();
         let direction = current_tile.follow(current.1.opposite());
         let next_pos = direction.add_to_pos(current.0);
         loop_tiles.insert(current.0, *current_tile);
@@ -155,7 +108,7 @@ impl Day for Day10 {
     get_input_for_day!(10);
 
     fn part_1(&self, input: &str) -> i64 {
-        let map = input.lines().map(|line| line.chars().map(MapTile::parse).collect::<Vec<_>>()).collect::<Vec<_>>();
+        let map = Map::parse(input);
 
         let tiles = follow_loop(&map);
 
@@ -163,12 +116,12 @@ impl Day for Day10 {
     }
 
     fn part_2(&self, input: &str) -> i64 {
-        let map = input.lines().map(|line| line.chars().map(MapTile::parse).collect::<Vec<_>>()).collect::<Vec<_>>();
+        let map = Map::parse(input);
 
         let loop_tiles = follow_loop(&map);
 
-        let count = map.iter().enumerate().fold(0, |count, (y, row)| {
-            let row_count = row.iter().enumerate().fold((0, false), |(count, toggle), (x, _)| {
+        map.iter_rows().enumerate().map(|(y, row)| {
+            row.iter().enumerate().fold((0, false), |(count, toggle), (x, _)| {
                 if let Some(tile) = loop_tiles.get(&(x, y)) {
                     if tile.has_direction(&Direction::South) {
                         return (count, !toggle);
@@ -177,11 +130,8 @@ impl Day for Day10 {
                     return (count + 1, toggle);
                 }
                 (count, toggle)
-            }).0;
-            count + row_count
-        });
-
-       count
+            }).0
+        }).sum::<usize>() as i64
     }
 }
 

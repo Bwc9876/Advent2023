@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
-use crate::{day::Day, get_input_for_day};
+use crate::{day::Day, get_input_for_day, utils::Grid};
 
 pub struct Day3;
 
 const EMPTY_CHAR: char = '.';
 
-fn str_to_2d_map(input: &str) -> Vec<Vec<char>> {
+type Manual = Grid<char>;
+
+fn str_to_2d_map(input: &str) -> Manual {
     let mut map = input
         .lines()
         .map(|line| line.chars().collect::<Vec<char>>())
@@ -16,7 +18,7 @@ fn str_to_2d_map(input: &str) -> Vec<Vec<char>> {
         line.push(EMPTY_CHAR); // Pad with a . at the end so numbers at the ends get processed
     }
 
-    map
+    Manual::new(map)
 }
 
 fn check_char(char: char) -> bool {
@@ -25,31 +27,28 @@ fn check_char(char: char) -> bool {
 
 type AdjacentCharMap = Vec<((usize, usize), char)>;
 
-fn get_adjacent_chars(input_map: &[Vec<char>], row: usize, starting_index: usize, ending_index: usize) -> AdjacentCharMap {
+fn get_adjacent_chars(input_map: &Manual, row: usize, starting_index: usize, ending_index: usize) -> AdjacentCharMap {
     let mut chars: AdjacentCharMap = vec![];
 
     let start_minus_one = starting_index.saturating_sub(1);
 
-    if starting_index != 0 {
-        let next_on_this_level = *input_map.get(row).unwrap().get(start_minus_one).unwrap_or(&EMPTY_CHAR);
-        chars.push(((row, start_minus_one), next_on_this_level));
+    if let Some(next_on_this_level) = input_map.get_row(row).and_then(|r| r.get(start_minus_one).copied()) {
+        chars.push(((row, start_minus_one), *next_on_this_level));
     }
 
-    let prev_on_this_level = input_map.get(row).unwrap().get(ending_index + 1);
-
-    if let Some(prev_on_this_level) = prev_on_this_level {
+    if let Some(prev_on_this_level) = input_map.get_row(row).and_then(|r| r.get(ending_index + 1).copied()) {
         chars.push(((row, ending_index + 1), *prev_on_this_level));
     }
 
-    let above = if row == 0 { None } else { input_map.get(row - 1) };
-    let below = input_map.get(row + 1);
+    let above = if row == 0 { None } else { input_map.get_row(row - 1) };
+    let below = input_map.get_row(row + 1);
 
     for current_col in start_minus_one..ending_index + 2 {
-        if let Some(above_row) = above {
-            chars.push(((row - 1, current_col), *above_row.get(current_col).unwrap_or(&EMPTY_CHAR)));
+        if let Some(above_row) = above.as_ref().and_then(|r| r.get(current_col).copied()).copied() {
+            chars.push(((row - 1, current_col), above_row));
         }
-        if let Some(below_row) = below {
-            chars.push(((row + 1, current_col), *below_row.get(current_col).unwrap_or(&EMPTY_CHAR)));
+        if let Some(below_row) = below.as_ref().and_then(|r| r.get(current_col).copied()).copied(){
+            chars.push(((row + 1, current_col), below_row));
         }
     }
 
@@ -64,18 +63,16 @@ impl Day for Day3 {
         
         let input_map = str_to_2d_map(input);
 
-        let mut total = 0;
-
-        for (i, line) in input_map.iter().enumerate() {
-
+        input_map.iter_rows().enumerate().map(|(x, r)| {
             let mut start_index = 0;
             let mut current_num = String::new();
+            let mut total = 0;
 
-            for (j, char) in line.iter().enumerate() {
+            for (y, char) in r.iter().enumerate() {
                 if char.is_ascii_digit() {
-                    current_num.push(*char);
+                    current_num.push(**char);
                     if current_num.len() == 1 {
-                        start_index = j;
+                        start_index = y;
                     }
                 } else {
 
@@ -85,9 +82,9 @@ impl Day for Day3 {
 
                     let chars_to_check = get_adjacent_chars(
                         &input_map, 
-                        i, 
+                        x, 
                         start_index, 
-                        j - 1
+                        y - 1
                     );
 
                     if chars_to_check.iter().any(|char| check_char(char.1)) {
@@ -99,9 +96,9 @@ impl Day for Day3 {
 
                 }
             }
-        }
 
-        total
+            total
+        }).sum::<i64>()
     }
 
     fn part_2(&self, input: &str) -> i64 {
@@ -110,14 +107,14 @@ impl Day for Day3 {
     
         let mut stars: HashMap<(usize, usize), Vec<u32>> = HashMap::new();
 
-        for (i, line) in input_map.iter().enumerate() {
+        for (i, line) in input_map.iter_rows().enumerate() {
 
             let mut start_index = 0;
             let mut current_num = String::new();
 
             for (j, char) in line.iter().enumerate() {
                 if char.is_ascii_digit() {
-                    current_num.push(*char);
+                    current_num.push(**char);
                     if current_num.len() == 1 {
                         start_index = j;
                     }
@@ -168,18 +165,6 @@ impl Day for Day3 {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_str_to_2d_map() {
-        let input = "1.2.3\n4.5.6\n7.8.9";
-        let expected = vec![
-            vec!['1', EMPTY_CHAR, '2', EMPTY_CHAR, '3', EMPTY_CHAR],
-            vec!['4', EMPTY_CHAR, '5', EMPTY_CHAR, '6', EMPTY_CHAR],
-            vec!['7', EMPTY_CHAR, '8', EMPTY_CHAR, '9', EMPTY_CHAR],
-        ];
-        let actual = str_to_2d_map(input);
-        assert_eq!(expected, actual);
-    }
 
     #[test]
     fn test_get_adjacent_chars() {

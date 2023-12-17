@@ -1,36 +1,26 @@
 use std::collections::HashMap;
 
-use crate::{day::Day, get_input_for_day};
+use crate::{day::Day, get_input_for_day, utils::{Grid, Direction, grid::Position}};
 
-fn make_grid(lines: Vec<&str>) -> Vec<Vec<char>> {
-    let mut grid = Vec::new();
-    for line in lines {
-        grid.push(line.chars().collect::<Vec<_>>());
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Tile {
+    Empty,
+    Round,
+    Square
+}
+
+impl From<char> for Tile {
+    fn from(c: char) -> Self {
+        match c {
+            '.' => Tile::Empty,
+            '#' => Tile::Square,
+            'O' => Tile::Round,
+            _ => panic!("Unknown tile: {}", c),
+        }
     }
-    grid
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
-
-type Position = (usize, usize);
-
-fn get_matches(grid: &[Vec<char>], char: char) -> Vec<Position> {
-    grid.iter().enumerate().flat_map(|(y, r)| {
-        r.iter().enumerate().filter_map(|(x, c)| {
-            if *c == char {
-                Some((x, y))
-            } else {
-                None
-            }
-        }).collect::<Vec<_>>()
-    }).collect::<Vec<_>>()
-}
+type Tiles = Grid<Tile>;
 
 fn get_new_pos_after_tilt(direction: &Direction, round: &Position, rounds_in_dir: &[Position], squares_in_dir: &[Position], size: &Position) -> Position {
     let closest_dir_square = &squares_in_dir.iter().filter(|(x, y)| {
@@ -90,45 +80,44 @@ fn tilt_rounds(direction: Direction, rounds: &[Position], squares: &(Vec<Vec<Pos
     }).collect::<Vec<_>>()
 }
 
-fn get_squares_per_line(grid: &Vec<Vec<char>>) -> (Vec<Vec<Position>>, Vec<Vec<Position>>) {
-    let mut squares_per_line = (0..grid.len()).map(|_| Vec::new()).collect::<Vec<_>>();
-    let mut squares_per_col = (0..grid[0].len()).map(|_| Vec::new()).collect::<Vec<_>>();
-    for (y, row) in grid.iter().enumerate() {
-        for (x, c) in row.iter().enumerate() {
-            if *c == CUBE {
-                squares_per_line[y].push((x, y));
-                squares_per_col[x].push((x, y));
-            }
-        }
-    }
-    (squares_per_line, squares_per_col)
-}
-
 fn hash_rounds(rounds: &[Position]) -> u64 {
     rounds.iter().fold(0, |acc, (x, y)| {
         acc + (x + y * 100) as u64
     })
 }
 
+fn get_round_positions(grid: &Tiles) -> Vec<Position> {
+    grid.iter().filter_map(|(p, c)| if c == &Tile::Round { Some(p) } else { None }).collect::<Vec<_>>()
+}
+
+fn get_square_positions_per_line(grid: &Tiles) -> (Vec<Vec<Position>>, Vec<Vec<Position>>) {
+    let mut squares_per_line = vec![Vec::new(); grid.height];
+    let mut squares_per_col = vec![Vec::new(); grid.width];
+    grid.iter().for_each(|(p, c)| {
+        if c == &Tile::Square {
+            squares_per_line[p.1].push(p);
+            squares_per_col[p.0].push(p);
+        }
+    });
+    (squares_per_line, squares_per_col)
+}
+
 pub struct Day14;
 
-const ROUND: char = 'O';
-const CUBE: char = '#';
 
 impl Day for Day14 {
 
     get_input_for_day!(14);
 
     fn part_1(&self, input: &str) -> i64 {
-        let lines =  input.lines().collect::<Vec<_>>();
-        let grid = make_grid(lines);
-        let rounds = get_matches(&grid, ROUND);
-        let squares_per_line = get_squares_per_line(&grid);
-        let size = (grid[0].len(), grid.len());
+        let grid = Grid::<Tile>::parse(input);
+        let rounds = get_round_positions(&grid);
+        let squares_per_line = get_square_positions_per_line(&grid);
+        let size = grid.size();
         let tilted_rounds = tilt_rounds(Direction::North, &rounds, &squares_per_line, size);
 
         tilted_rounds.into_iter().map(|r| {
-            grid.len() - r.1
+            grid.size().1 - r.1
         }).sum::<usize>() as i64
     }
 
@@ -136,12 +125,10 @@ impl Day for Day14 {
         
         const TIMES: usize = 1000000000;
         
-        let lines =  input.lines().collect::<Vec<_>>();
-        let grid = make_grid(lines);
-
-        let mut rounds = get_matches(&grid, ROUND);
-        let squares_in_lines = get_squares_per_line(&grid);
-        let size = (grid[0].len(), grid.len());
+        let grid = Grid::<Tile>::parse(input);
+        let mut rounds = get_round_positions(&grid);
+        let squares_per_line = get_square_positions_per_line(&grid);
+        let size = grid.size();
 
         let dirs = vec![Direction::North, Direction::West, Direction::South, Direction::East];
 
@@ -151,7 +138,7 @@ impl Day for Day14 {
 
         while pos < TIMES {
             for d in &dirs {
-                rounds = tilt_rounds(*d, &rounds, &squares_in_lines, size);
+                rounds = tilt_rounds(*d, &rounds, &squares_per_line, size);
             }
 
             pos += 1;
@@ -171,7 +158,7 @@ impl Day for Day14 {
         }
 
         rounds.into_iter().map(|r| {
-            grid.len() - r.1
+            grid.size().1 - r.1
         }).sum::<usize>() as i64
     }
 }

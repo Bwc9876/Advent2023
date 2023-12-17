@@ -1,4 +1,4 @@
-use crate::{day::Day, get_input_for_day, util::parse_padded_numbers};
+use crate::{day::Day, get_input_for_day, utils::parse_padded_numbers};
 
 
 pub struct Day6;
