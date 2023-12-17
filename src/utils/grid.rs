@@ -8,44 +8,6 @@ pub struct Grid<T> {
     pub data: Vec<Vec<T>>,
 }
 
-pub struct GridRowIter<'a, T> {
-    grid: &'a Grid<T>,
-    y: usize,
-}
-
-impl<'a, T> Iterator for GridRowIter<'a, T> {
-    type Item = Vec<&'a T>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.y < self.grid.height {
-            let row = self.grid.data[self.y].iter().collect();
-            self.y += 1;
-            Some(row)
-        } else {
-            None
-        }
-    }
-}
-
-pub struct GridColIter<'a, T> {
-    grid: &'a Grid<T>,
-    x: usize,
-}
-
-impl<'a, T> Iterator for GridColIter<'a, T> {
-    type Item = Vec<&'a T>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.x < self.grid.width {
-            let col = self.grid.data.iter().map(|row| &row[self.x]).collect();
-            self.x += 1;
-            Some(col)
-        } else {
-            None
-        }
-    }
-}
-
 impl<T> Grid<T> {
     pub fn new(data: Vec<Vec<T>>) -> Self {
         let width = data[0].len();
@@ -149,6 +111,44 @@ impl<'a, T> Iterator for FullGridIter<'a, T> {
                 self.y += 1;
             }
             Some((pos, item))
+        } else {
+            None
+        }
+    }
+}
+
+pub struct GridRowIter<'a, T> {
+    grid: &'a Grid<T>,
+    y: usize,
+}
+
+impl<'a, T> Iterator for GridRowIter<'a, T> {
+    type Item = Vec<&'a T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.y < self.grid.height {
+            let row = self.grid.data[self.y].iter().collect();
+            self.y += 1;
+            Some(row)
+        } else {
+            None
+        }
+    }
+}
+
+pub struct GridColIter<'a, T> {
+    grid: &'a Grid<T>,
+    x: usize,
+}
+
+impl<'a, T> Iterator for GridColIter<'a, T> {
+    type Item = Vec<&'a T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.x < self.grid.width {
+            let col = self.grid.data.iter().map(|row| &row[self.x]).collect();
+            self.x += 1;
+            Some(col)
         } else {
             None
         }
