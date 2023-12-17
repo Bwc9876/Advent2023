@@ -65,4 +65,14 @@ impl Direction {
             Self::West => (pos.0 - 1, pos.1),
         }
     }
+
+    pub fn add_to_pos_times(&self, pos: (usize, usize), times: i32) -> (i32, i32) {
+        let pos = (pos.0 as i32, pos.1 as i32);
+        match self {
+            Self::North => (pos.0, pos.1 - times),
+            Self::South => (pos.0, pos.1 + times),
+            Self::East => (pos.0 + times, pos.1),
+            Self::West => (pos.0 - times, pos.1),
+        }
+    }
 }
