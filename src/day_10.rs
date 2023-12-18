@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{day::Day, get_input_for_day, utils::{Direction, Grid, grid::Position}};
+use crate::{day::Day, get_input_for_day, utils::{Direction, Grid, grid::Position, dir::Movement}};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum MapTile {

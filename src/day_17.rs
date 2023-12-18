@@ -38,7 +38,7 @@ impl PartialEq for Node {
 
 impl Eq for Node {}
 
-fn calc_path(input: &str, min: i32, max: i32) -> i64 {
+fn calc_path(input: &str, min: usize, max: usize) -> i64 {
     let grid = CityGrid::parse(input);
 
     let target = (grid.width - 1, grid.height - 1);
@@ -71,25 +71,18 @@ fn calc_path(input: &str, min: i32, max: i32) -> i64 {
             let mut next_cost = -node.cost;
 
             for step in 1..=max {
-                let moved = dir.add_to_pos_times(node.pos, step);
+                if let Some(moved) = grid.get_next_pos_times(node.pos, dir, step) {
+                    next_cost += grid.get(moved).unwrap().0 as i64;
 
-                if !grid.check_bounds(moved) {
-                    continue;
+                    if min <= step && distances.get(&(moved, dir)).map(|&c| next_cost < c).unwrap_or(true) {
+                        distances.insert((moved, dir), next_cost);
+                        frontier.push(Node {
+                            cost: -next_cost,
+                            pos: moved,
+                            dir: Some(dir),
+                        });
+                    }       
                 }
-
-                let moved = (moved.0 as usize, moved.1 as usize);
-
-                next_cost += grid.get(moved).unwrap().0 as i64;
-
-                if min <= step && distances.get(&(moved, dir)).map(|&c| next_cost < c).unwrap_or(true) {
-                    distances.insert((moved, dir), next_cost);
-                    frontier.push(Node {
-                        cost: -next_cost,
-                        pos: moved,
-                        dir: Some(dir),
-                    });
-                }
-
             }
         }
     }

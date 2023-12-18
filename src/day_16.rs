@@ -22,7 +22,6 @@ enum Tile {
 }
 
 impl From<char> for Tile {
-
     fn from(c: char) -> Self {
         match c {
             '.' => Self::Empty,
@@ -33,7 +32,6 @@ impl From<char> for Tile {
             _ => panic!("Invalid tile: {}", c),
         }
     }
-
 }
 
 type Tiles = Grid<Tile>;

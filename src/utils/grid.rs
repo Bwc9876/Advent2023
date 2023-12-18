@@ -1,4 +1,7 @@
-use super::{dir::CARDINALS, Direction};
+use super::{
+    dir::{Movement, CARDINALS},
+    Direction,
+};
 
 pub type Position = (usize, usize);
 
@@ -67,12 +70,21 @@ impl<T> Grid<T> {
         (self.width, self.height)
     }
 
-    pub fn check_bounds(&self, pos: (i32, i32)) -> bool {
-        pos.0 >= 0 && pos.0 < self.width as i32 && pos.1 >= 0 && pos.1 < self.height as i32
+    pub fn check_bounds(&self, pos: (isize, isize)) -> bool {
+        pos.0 >= 0 && pos.0 < self.width as isize && pos.1 >= 0 && pos.1 < self.height as isize
     }
 
-    pub fn get_next_pos(&self, current_pos: Position, dir: Direction) -> Option<Position> {
-        let new_pos = dir.add_to_pos(current_pos);
+    pub fn get_next_pos(&self, current_pos: Position, dir: impl Movement) -> Option<Position> {
+        self.get_next_pos_times(current_pos, dir, 1)
+    }
+
+    pub fn get_next_pos_times(
+        &self,
+        current_pos: Position,
+        dir: impl Movement,
+        times: usize,
+    ) -> Option<Position> {
+        let new_pos = dir.add_to_pos_times(current_pos, times as isize);
 
         if self.check_bounds(new_pos) {
             Some((new_pos.0 as usize, new_pos.1 as usize))
@@ -90,6 +102,16 @@ impl<T> Grid<T> {
             })
             .collect()
     }
+
+    // pub fn get_adjacents_with_diag(&self, pos: Position) -> Vec<(Position, ExpandedDirection)> {
+    //     COMPASS
+    //         .iter()
+    //         .filter_map(|dir| {
+    //             self.get_next_pos(pos, *dir)
+    //                 .map(|next_pos| (next_pos, *dir))
+    //         })
+    //         .collect()
+    // }
 }
 
 pub struct FullGridIter<'a, T> {
