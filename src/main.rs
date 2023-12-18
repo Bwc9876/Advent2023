@@ -5,7 +5,7 @@ mod utils;
 
 mod_days!(
     day_1, day_2, day_3, day_4, day_5, day_6, day_7, day_8, day_9, day_10, day_11, day_12, day_13,
-    day_14, day_15, day_16, day_17
+    day_14, day_15, day_16, day_17, day_18
 );
 
 use std::io;
@@ -20,6 +20,7 @@ use day_14::Day14;
 use day_15::Day15;
 use day_16::Day16;
 use day_17::Day17;
+use day_18::Day18;
 use day_2::Day2;
 use day_3::Day3;
 use day_4::Day4;
@@ -51,6 +52,7 @@ fn match_day(day: u32) -> Box<dyn Day> {
         15 => Box::new(Day15),
         16 => Box::new(Day16),
         17 => Box::new(Day17),
+        18 => Box::new(Day18),
         _ => panic!("Invalid day selected, exiting..."),
     }
 }
@@ -82,7 +84,7 @@ fn run_day(day_num: u32, part: u32, input: &str) {
 fn run_all_days() {
     let start = std::time::Instant::now();
 
-    for day_num in 1..=17 {
+    for day_num in 1..=18 {
         for part in 1..=2 {
             let day = match_day(day_num);
 

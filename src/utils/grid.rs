@@ -42,6 +42,11 @@ impl<T> Grid<T> {
         self.data.get(y).and_then(|row| row.get(x))
     }
 
+    // pub fn get_mut(&mut self, pos: Position) -> Option<&mut T> {
+    //     let (x, y) = pos;
+    //     self.data.get_mut(y).and_then(|row| row.get_mut(x))
+    // }
+
     pub fn iter(&self) -> FullGridIter<T> {
         FullGridIter {
             grid: self,
@@ -102,6 +107,20 @@ impl<T> Grid<T> {
             })
             .collect()
     }
+
+    // pub fn resize(&mut self, new_width: usize, new_height: usize, default: T)
+    // where
+    //     T: Clone,
+    // {
+    //     if new_width > self.width {
+    //         for row in self.data.iter_mut() {
+    //             row.resize(new_width, default.clone());
+    //         }
+    //     }
+    //     self.data.resize(new_height, vec![default; new_width]);
+    //     self.width = new_width;
+    //     self.height = new_height;
+    // }
 
     // pub fn get_adjacents_with_diag(&self, pos: Position) -> Vec<(Position, ExpandedDirection)> {
     //     COMPASS
@@ -195,17 +214,11 @@ impl GridPointer {
         Self { pos, dir }
     }
 
-    pub fn get_next_pos<T>(&self, grid: &Grid<T>) -> Option<Position>
-    where
-        T: From<char>,
-    {
+    pub fn get_next_pos<T>(&self, grid: &Grid<T>) -> Option<Position> {
         grid.get_next_pos(self.pos, self.dir)
     }
 
-    pub fn move_to_next<T>(&mut self, grid: &Grid<T>) -> bool
-    where
-        T: From<char>,
-    {
+    pub fn move_to_next<T>(&mut self, grid: &Grid<T>) -> bool {
         if let Some(next_pos) = self.get_next_pos(grid) {
             self.pos = next_pos;
             true

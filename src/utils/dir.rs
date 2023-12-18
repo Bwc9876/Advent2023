@@ -10,6 +10,11 @@ pub trait Movement {
         let kernel = self.get_kernel();
         (pos.0 + kernel.0 * times, pos.1 + kernel.1 * times)
     }
+
+    fn add_to_pos_times_negative(&self, pos: (isize, isize), times: isize) -> (isize, isize) {
+        let kernel = self.get_kernel();
+        (pos.0 + kernel.0 * times, pos.1 + kernel.1 * times)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
