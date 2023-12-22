@@ -37,9 +37,31 @@ impl<T> Grid<T> {
         }
     }
 
+    pub fn normalize_position(&self, pos: (isize, isize)) -> Position {
+        let (mut x, mut y) = pos;
+        while x < 0 {
+            x += self.width as isize;
+        }
+        while y < 0 {
+            y += self.height as isize;
+        }
+        while x >= self.width as isize {
+            x %= self.width as isize;
+        }
+        while y >= self.height as isize {
+            y %= self.height as isize;
+        }
+        (x as usize, y as usize)
+    }
+
     pub fn get(&self, pos: Position) -> Option<&T> {
         let (x, y) = pos;
         self.data.get(y).and_then(|row| row.get(x))
+    }
+
+    pub fn infinite_get(&self, pos: (isize, isize)) -> &T {
+        let pos = self.normalize_position(pos);
+        self.get(pos).unwrap()
     }
 
     // pub fn get_mut(&mut self, pos: Position) -> Option<&mut T> {
@@ -104,6 +126,19 @@ impl<T> Grid<T> {
             .filter_map(|dir| {
                 self.get_next_pos(pos, *dir)
                     .map(|next_pos| (next_pos, *dir))
+            })
+            .collect()
+    }
+
+    pub fn get_direct_adjacents_wrapping(
+        &self,
+        pos: (isize, isize),
+    ) -> Vec<((isize, isize), Direction)> {
+        CARDINALS
+            .iter()
+            .map(|dir| {
+                let next_pos = dir.add_to_pos_unsafe((pos.0, pos.1));
+                (next_pos, *dir)
             })
             .collect()
     }

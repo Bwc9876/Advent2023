@@ -5,6 +5,10 @@ pub trait Movement {
         self.add_to_pos_times(pos, 1)
     }
 
+    fn add_to_pos_unsafe(&self, pos: (isize, isize)) -> (isize, isize) {
+        self.add_to_pos_times_negative(pos, -1)
+    }
+
     fn add_to_pos_times(&self, pos: (usize, usize), times: isize) -> (isize, isize) {
         let pos = (pos.0 as isize, pos.1 as isize);
         let kernel = self.get_kernel();
