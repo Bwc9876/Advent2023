@@ -77,6 +77,14 @@ impl<T> Grid<T> {
         }
     }
 
+    pub fn iter_rev(&self) -> FullGridIter<T> {
+        FullGridIter {
+            grid: self,
+            x: self.width - 1,
+            y: self.height - 1,
+        }
+    }
+
     pub fn iter_rows(&self) -> GridRowIter<T> {
         GridRowIter { grid: self, y: 0 }
     }
@@ -190,6 +198,22 @@ impl<'a, T> Iterator for FullGridIter<'a, T> {
         } else {
             None
         }
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for FullGridIter<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.x > 0 {
+            self.x -= 1;
+        } else if self.y > 0 {
+            self.x = self.grid.width - 1;
+            self.y -= 1;
+        } else {
+            return None;
+        }
+        let pos = (self.x, self.y);
+        let item = self.grid.get(pos).unwrap();
+        Some((pos, item))
     }
 }
 
