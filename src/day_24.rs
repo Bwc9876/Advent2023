@@ -80,21 +80,11 @@ impl Day for Day24 {
     }
 
     fn part_2(&self, _input: &str) -> i64 {
+        // TODO: Wanna try some fancy schmancy math?
         908621716620524
     }
 
     // Original solution using Z3
-    // I'm commenting it out because:
-    // A) It's slow
-    // B) I have to include the z3 crate which has libclang as a dependency and I don't wanna use shell.nix whenever I want to run this
-    // C) This is not a good puzzle for AoC, I honestly don't know why they included it
-    //
-    // I like puzzles that make *me* think, when I basically have to outsource the ENTIRE solution to an external library it's not fun anymore
-    // Figuring this out was basically just looking at some SO post about intersection of 3d lines and translating the given equations to z3
-    // There was 0 thinking involved, just translating
-    // The hardest part was getting the z3 crate to compile under nix
-    //
-    // Don't get me wrong z3 and SAT solvers are cool, but this is not the place for them
     //
     // fn part_2(&self, input: &str) -> i64 {
     //     use z3::ast::Ast;
